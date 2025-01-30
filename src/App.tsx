@@ -1,7 +1,7 @@
 import { CssBaseline, Box, ThemeProvider, createTheme } from "@mui/material";
-import Sidebar from "./components/Sidebar.tsx";
-import Header from "./components/Header.tsx";
-import Dashboard from "./components/Dashboard.tsx";
+import Sidebar from "./app/dashboard/Sidebar.tsx";
+import Header from "./app/dashboard/Header.tsx";
+import Dashboard from "./app/dashboard/Dashboard.tsx";
 
 const theme = createTheme({
     palette: {
