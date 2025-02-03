@@ -1,19 +1,17 @@
 import {OrderItem} from "./OrderItem.ts";
 import {BaseEntity} from "./BaseEntity.ts";
-import {TimeWindow} from "./TimeWindow.ts";
+import {OrderStatus} from "./enums/OrderStatus.ts";
+import {OrderSource} from "./enums/OrderSource.ts";
 
 export interface Order extends BaseEntity {
     deliveryDate: Date;
-    deliveryLocation: {
-        address: string;
-    }
-    phoneNumber: {
-        phoneNumber: string;
-    }
+    address: string;
+    phoneNumber: string;
     items: OrderItem[];
-    status: number; //enum
+    status: OrderStatus; //enum
     note: string;
-    orderSource: number; //enum
-    deliveryTimeWindow: TimeWindow;
+    orderSource: OrderSource; //enum
+    deliveryTimeWindowStart: Date;
+    deliveryTimeWindowEnd: Date;
     totalAmount: number;
 }
