@@ -12,7 +12,7 @@ function AppShell({ children }: props) {
             <Box sx={{ width: "250px", bgcolor: "primary.main", color: "white", p: 2 }}>
                 <h2>Meine Sidebar</h2>
                 <ul>
-                    <li><a href="/">Dashboard</a></li>
+                    <li><a href="/public">Dashboard</a></li>
                     <li><a href="/bestellungsliste">Bestellungsliste</a></li>
                 </ul>
             </Box>

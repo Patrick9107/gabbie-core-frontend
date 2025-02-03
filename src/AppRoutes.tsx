@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import AppShell from "./app/layout/app-shell/AppShell.tsx";
+import AppShell from "./app/layout/AppShell.tsx";
 import ListOrders from "./app/orders/ListOrders.tsx";
 import Dashboard from "./app/old_dashboard/Dashboard.tsx";
 
