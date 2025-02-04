@@ -29,7 +29,7 @@ const LoginForm = () => {
       justifyContent="center"
       alignItems="center"
       height="100vh"
-      bgcolor="#f4f6f9"
+      bgcolor="white"
       p={3}
     >
       <Box
@@ -43,8 +43,8 @@ const LoginForm = () => {
         width="100%"
         maxWidth="400px"
       >
-        <Typography variant="h5" color="primary" gutterBottom>
-          Login to Your Account
+        <Typography variant="h5" gutterBottom>
+          Logge dich in dein Konto ein
         </Typography>
         <Formik
           initialValues={{ username: '', password: '' }}
@@ -100,16 +100,15 @@ const LoginForm = () => {
                 <Button
                   type="submit"
                   variant="contained"
-                  color="primary"
                   fullWidth
                   disabled={status === 'pending'} // Button deaktivieren, wenn die Mutation läuft
                   size="large"
-                  sx={{ padding: '12px 0' }}
+                  sx={{ padding: '12px 0',  bgcolor: "#235817" }}
                 >
                   {status === 'pending' ? (
                     <CircularProgress size={24} color="inherit" />
                   ) : (
-                    'Login'
+                    'Anmelden'
                   )}
                 </Button>
               </Box>
