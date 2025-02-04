@@ -1,20 +1,23 @@
 import { Button, TextField, Typography, CircularProgress, Box } from '@mui/material';
 import { Formik } from 'formik';
 import { useMutation } from '@tanstack/react-query';
-import { loginUser } from '../../infra/api/authService.ts'; // Der Service, der die API aufruft
+import { loginUser } from '../../infra/api/authService.ts';
+import { useNavigate } from 'react-router-dom'; // Der Service, der die API aufruft
 
 const LoginForm = () => {
+  const naviagte = useNavigate();
   // Verwende `useMutation` mit der Mutation-Funktion und den Statuswerten
   const { mutateAsync, status, error, isError, } = useMutation({
     mutationFn: loginUser,
     onSuccess: (data: { token: string }) => {
-      sessionStorage.setItem('authToken', data.token);
+      localStorage.setItem('authToken', data.token);
+      naviagte('/dashboard');
     },
   });
 
   const handleSubmit = async (values: { username: string; password: string }) => {
     try {
-      await mutateAsync(values); // Werte an die Mutation übergeben
+      await mutateAsync(values);
     } catch (err) {
       console.error('Fehler beim Absenden des Formulars:', err);
     }
