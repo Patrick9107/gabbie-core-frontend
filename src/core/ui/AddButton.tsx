@@ -1,9 +1,14 @@
 import { Button } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 
-export default function AddButton() {
+interface props {
+    onClick: () => void;
+}
+
+export default function AddButton({onClick}: props) {
     return (
         <Button
+            onClick={onClick}
             variant="contained"
             sx={{
                 backgroundColor: "#16a34a",

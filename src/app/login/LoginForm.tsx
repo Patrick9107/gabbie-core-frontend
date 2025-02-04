@@ -5,13 +5,13 @@ import { loginUser } from '../../infra/api/authService.ts';
 import { useNavigate } from 'react-router-dom'; // Der Service, der die API aufruft
 
 const LoginForm = () => {
-  const naviagte = useNavigate();
+  const navigate = useNavigate();
   // Verwende `useMutation` mit der Mutation-Funktion und den Statuswerten
   const { mutateAsync, status, error, isError, } = useMutation({
     mutationFn: loginUser,
     onSuccess: (data: { token: string }) => {
       localStorage.setItem('authToken', data.token);
-      naviagte('/dashboard');
+      navigate('/');
     },
   });
 

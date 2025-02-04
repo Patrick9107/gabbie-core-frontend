@@ -4,14 +4,14 @@ import {OrderStatus} from "./enums/OrderStatus.ts";
 import {OrderSource} from "./enums/OrderSource.ts";
 
 export interface Order extends BaseEntity {
-    deliveryDate: Date;
+    deliveryDate: Date | null;
     address: string;
     phoneNumber: string;
     items: OrderItem[];
     status: OrderStatus; //enum
     note: string;
     orderSource: OrderSource; //enum
-    deliveryTimeWindowStart: Date;
-    deliveryTimeWindowEnd: Date;
+    deliveryTimeWindowStart: Date | null;
+    deliveryTimeWindowEnd: Date | null;
     totalAmount: number;
 }
