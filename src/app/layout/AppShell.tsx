@@ -13,6 +13,7 @@ function AppShell({ children }: props) {
                 <h2>Meine Sidebar</h2>
                 <ul>
                     <li><a href="/">Dashboard</a></li>
+                    <li><a href="/login">Login</a></li>
                     <li><a href="/bestellungsliste">Bestellungsliste</a></li>
                 </ul>
             </Box>
