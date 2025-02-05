@@ -7,11 +7,15 @@ import LoginForm from './app/login/LoginForm.tsx';
 function AppRoutes() {
     return (
         <BrowserRouter>
+            <Routes>
+                <Route path="/login" element={<LoginForm/>} />
+            </Routes>
             <AppShell>
                 <Routes>
+                    <Route>
                     <Route path="/" element={<Dashboard/>} />
-                    <Route path="/login" element={<LoginForm/>}></Route>
                     <Route path="/bestellungsliste" element={<ListOrders />} />
+                    </Route>
                 </Routes>
             </AppShell>
         </BrowserRouter>

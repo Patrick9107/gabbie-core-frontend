@@ -8,10 +8,14 @@ interface props {
 }
 
 function AppShell({ children }: props) {
+    //todo
+    // if nicht eingeloggt -> geh zu login seite
+    // maybe mit useEffect
+
     return (
         <Box sx={{ display: "flex", height: "100vh" }}>
             <Box sx={{ width: "250px", bgcolor: "#235817", color: "white", p: 2 }}>
-                <h2>Meine Sidebar</h2>
+                <h2>GABBIE</h2>
                 <ul className={styles.ul}>
                     <li><a className={styles.a} href="/">Dashboard</a></li>
                     <li><a className={styles.a} href="/login">Login</a></li>
