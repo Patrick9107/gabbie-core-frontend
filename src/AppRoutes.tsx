@@ -8,16 +8,14 @@ function AppRoutes() {
     return (
         <BrowserRouter>
             <Routes>
-                <Route path="/login" element={<LoginForm/>} />
-            </Routes>
-            <AppShell>
-                <Routes>
-                    <Route>
-                    <Route path="/" element={<Dashboard/>} />
+
+                <Route path="/login" element={<LoginForm />} />
+
+                <Route element={<AppShell />}>
+                    <Route path="/" element={<Dashboard />} />
                     <Route path="/bestellungen" element={<ListOrders />} />
-                    </Route>
-                </Routes>
-            </AppShell>
+                </Route>
+            </Routes>
         </BrowserRouter>
     );
 }
