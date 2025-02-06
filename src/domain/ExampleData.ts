@@ -41,7 +41,7 @@ export const product1: Product = {
     weight: 1.2,
     name: "Wasserflasche",
     description: "500ml Mineralwasser",
-    imageUrl: "https://example.com/wasser.jpg",
+    imageUrl: null,
     container: container1
 };
 
@@ -51,7 +51,7 @@ export const product2: Product = {
     weight: 0.8,
     name: "Limonade",
     description: "330ml Zitronenlimonade",
-    imageUrl: "https://example.com/limonade.jpg",
+    imageUrl: "src/assets/react.svg",
     container: container2
 };
 
@@ -61,7 +61,7 @@ export const product3: Product = {
     weight: 0.5,
     name: "Dosenbier",
     description: "500ml Bier in der Dose",
-    imageUrl: "https://example.com/bier.jpg",
+    imageUrl: "public/vite.svg",
     container: container3
 };
 
@@ -71,7 +71,7 @@ export const product4: Product = {
     weight: 1.0,
     name: "Apfelsaft",
     description: "1L naturtrüber Apfelsaft",
-    imageUrl: "https://example.com/apfelsaft.jpg",
+    imageUrl: "goofy url die es nicht gibt",
     container: container4
 };
 

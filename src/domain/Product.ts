@@ -6,6 +6,6 @@ export interface Product extends BaseEntity {
     weight: number;
     name: string;
     description: string;
-    imageUrl: string;
-    container: Container;
+    imageUrl: string | null;
+    container: Container | null | undefined;
 }

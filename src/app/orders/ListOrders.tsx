@@ -7,6 +7,7 @@ import {Dayjs} from "dayjs";
 import DeleteConfirmationDialog from "../../core/ui/DeleteConfirmationDialog.tsx";
 import OrderTable from "./OrderTable.tsx";
 import OrderDialog from "./OrderDialog.tsx";
+import {Typography} from "@mui/material";
 
 
 const availableProducts: Product[] = [
@@ -67,15 +68,17 @@ function ListOrders() {
     };
 
     const handleSubmit = () => {
+        let updatedOrder = newOrder;
+
         if (newOrder.id === -1) {
-            setNewOrder({ ...newOrder, id: Math.max(...orders.map(o => o.id), 0) + 1 });
+            updatedOrder = { ...newOrder, id: Math.max(0, ...orders.map(o => o.id)) + 1};
         }
 
-        setOrders((prevOrders) => {
+        setOrders(prevOrders => {
             if (edit) {
-                return prevOrders.map(o => o.id === newOrder.id ? newOrder : o); // Aktualisiert Bestellung an derselben Position
+                return prevOrders.map(o => o.id === updatedOrder.id ? updatedOrder : o);
             }
-            return [...prevOrders, newOrder];
+            return [...prevOrders, updatedOrder];
         });
 
         setIsOpen(false);
@@ -84,6 +87,7 @@ function ListOrders() {
         setNewOrderProducts([]);
         setSelectedVehicle(null);
     };
+
 
     const handleCancel = () => {
         setIsOpen(false);
@@ -129,7 +133,7 @@ function ListOrders() {
 
     return (
         <>
-            <h1>Bestellübersicht</h1>
+            <Typography sx={{ fontWeight: "bold" }} variant="h4" gutterBottom> Bestellübersicht </Typography>
             <AddButton onClick={() => setIsOpen(true)} />
             <OrderTable orders={orders} onEdit={handleEditButtonClicked} onDelete={handleDeleteButtonClicked} />
 
