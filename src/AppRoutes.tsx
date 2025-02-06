@@ -14,7 +14,7 @@ function AppRoutes() {
                 <Routes>
                     <Route>
                     <Route path="/" element={<Dashboard/>} />
-                    <Route path="/bestellungsliste" element={<ListOrders />} />
+                    <Route path="/bestellungen" element={<ListOrders />} />
                     </Route>
                 </Routes>
             </AppShell>
