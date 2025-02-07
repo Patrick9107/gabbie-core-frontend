@@ -24,7 +24,7 @@ function AppShell()  {
     const navItems = new Map<string, string>([
         ['Dashboard', '/'],
         ['Bestellungsübersicht', '/bestellungen'],
-        ['Login', '/login'],
+        ['Logout', '/logout'],
     ]);
 
     return (

@@ -2,15 +2,25 @@ import { Button, TextField, Typography, CircularProgress, Box } from '@mui/mater
 import { Formik } from 'formik';
 import { useMutation } from '@tanstack/react-query';
 import { loginUser } from '../../infra/api/authService.ts';
-import { useNavigate } from 'react-router-dom'; // Der Service, der die API aufruft
+import { useNavigate } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
+import { useAuth } from './AuthProvider.tsx';
+
 
 const LoginForm = () => {
   const navigate = useNavigate();
-  // Verwende `useMutation` mit der Mutation-Funktion und den Statuswerten
-  const { mutateAsync, status, error, isError, } = useMutation({
+  const { setIsTokenValid } = useAuth(); // Access set function from context
+
+  const { mutateAsync, status, error, isError } = useMutation({
     mutationFn: loginUser,
     onSuccess: (data: { token: string }) => {
       localStorage.setItem('authToken', data.token);
+
+      const decodedToken = JSON.parse(JSON.stringify(jwtDecode(data.token)));
+      const role = decodedToken["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
+
+      localStorage.setItem('role', role);
+      setIsTokenValid(true); // Set the token validity to true
       navigate('/');
     },
   });
