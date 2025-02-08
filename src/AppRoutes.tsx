@@ -7,27 +7,13 @@ import CircularProgress from '@mui/material/CircularProgress'; // Import Circula
 import Box from '@mui/material/Box';
 import { useAuth } from './app/login/AuthProvider.tsx';
 import  Logout  from './app/login/Logout.tsx';
-import VehicleList from "./app/cars/carselection.tsx"; // Box for centering the spinner
+import VehicleList from "./app/cars/carselection.tsx";
+import ListProducts from "./app/products/ListProducts.tsx"; // Box for centering the spinner
 
 function AppRoutes() {
 
   const { isTokenValid } = useAuth();
   console.log(isTokenValid);// Access global auth state
-
-  if (isTokenValid === null) {
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '100vh',
-        }}
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
 
   // If token validation is still in progress
   if (isTokenValid === null) {
@@ -51,11 +37,11 @@ function AppRoutes() {
         <Route path="/login" element={<LoginForm />} />
         <Route element={<AppShell />}>
           <Route>
-            <Route path="/" element={isTokenValid ? <Dashboard /> : <Navigate to="/bestellungen" />} />
-            <Route path="/bestellungen" element={isTokenValid ? <ListOrders /> : <Navigate to="/bestellungen" />} />
+            <Route path="/" element={isTokenValid ? <Dashboard /> : <Navigate to="/login" />} />
+            <Route path="/bestellungen" element={isTokenValid ? <ListOrders /> : <Navigate to="/login" />} />
+            <Route path="/produkte" element={isTokenValid ? <ListProducts /> : <Navigate to="/login" />} />
+            <Route path="/fahrzeuge" element={<VehicleList />} />
             <Route path="/logout" element={<Logout />} />
-              <Route path="/cars/carselection" element={<VehicleList />} />
-
           </Route>
         </Route>
       </Routes>

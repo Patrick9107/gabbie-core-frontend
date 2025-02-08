@@ -8,8 +8,11 @@ import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import InboxIcon from '@mui/icons-material/MoveToInbox';
-import MailIcon from '@mui/icons-material/Mail';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import LocalMallIcon from '@mui/icons-material/LocalMall';
+import CategoryIcon from '@mui/icons-material/Category';
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import {Outlet} from "react-router-dom";
 import React from "react";
 
@@ -21,11 +24,13 @@ function AppShell()  {
     // if nicht eingeloggt -> geh zu login seite
     // maybe mit useEffect
 
-    const navItems = new Map<string, string>([
-        ['Dashboard', '/'],
-        ['Bestellungsübersicht', '/bestellungen'],
-        ['Logout', '/logout'],
-    ]);
+    const navItems = [
+        { text: 'Dashboard', link: '/', icon: <DashboardIcon /> },
+        { text: 'Bestellungsübersicht', link: '/bestellungen', icon: <LocalMallIcon /> },
+        { text: 'Produkte', link: '/produkte', icon: <CategoryIcon /> },
+        { text: 'Fahrzeuge', link: '/fahrzeuge', icon: <LocalShippingIcon /> },
+        { text: 'Logout', link: '/logout', icon: <ExitToAppIcon /> }
+    ];
 
     return (
         <Box sx={{ display: 'flex' }}>
@@ -37,39 +42,31 @@ function AppShell()  {
                     '& .MuiDrawer-paper': {
                         width: drawerWidth,
                         boxSizing: 'border-box',
-                        //     hier ändern für bgcolor
                     },
                 }}
                 variant="permanent"
                 anchor="left"
             >
-                <Toolbar />
+                <Toolbar sx={{display: "flex", justifyContent: "center"}}>
+                    <Box
+                        component="img"
+                        alt="logo"
+                        src="logo.svg"
+                        maxWidth={drawerWidth - 40}
+                    />
+                </Toolbar>
                 <Divider />
                 <List>
-                    {Array.from(navItems.entries()).map(([text, link], index) => (
+                    {navItems.map(({ text, link, icon }) => (
                         <ListItem key={text} disablePadding>
                             <ListItemButton href={link}>
-                                <ListItemIcon>
-                                    {index % 2 === 0 ? <InboxIcon/> : <MailIcon/>}
-                                </ListItemIcon>
-                                <ListItemText primary={text}/>
-                            </ListItemButton>
-                        </ListItem>
-                    ))}
-                </List>
-                <Divider/>
-                <List>
-                    {['Fahrzeuge', 'Produkte'].map((text, index) => (
-                        <ListItem key={text} disablePadding>
-                            <ListItemButton>
-                                <ListItemIcon>
-                                    {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
-                                </ListItemIcon>
+                                <ListItemIcon>{icon}</ListItemIcon>
                                 <ListItemText primary={text} />
                             </ListItemButton>
                         </ListItem>
                     ))}
                 </List>
+                <Divider/>
             </Drawer>
             <Box component="main" sx={{flexGrow: 1, p: 3}}>
                 <Outlet/>

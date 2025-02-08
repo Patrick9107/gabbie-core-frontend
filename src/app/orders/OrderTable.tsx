@@ -13,6 +13,11 @@ interface Props {
     onDelete: (id: number) => void;
 }
 
+const sumSx = {
+    borderBottom: "none",
+    fontWeight: "bold"
+}
+
 const OrderTable = ({ orders, onEdit, onDelete }: Props) => {
     const [openRows, setOpenRows] = useState(new Map<number, boolean>());
 
@@ -75,6 +80,11 @@ const OrderTable = ({ orders, onEdit, onDelete }: Props) => {
                                                         <TableCell> {item.product.price}€ </TableCell>
                                                     </TableRow>
                                                 ))}
+                                                <TableRow>
+                                                    <TableCell sx={sumSx}>Summe</TableCell>
+                                                    <TableCell sx={sumSx}>{order.items.reduce((previousValue, currentValue) => previousValue + currentValue.quantity, 0)}</TableCell>
+                                                    <TableCell sx={sumSx}>{order.totalAmount}€</TableCell>
+                                                </TableRow>
                                             </TableBody>
                                         </Table>
                                         <Box sx={{display: "flex", marginTop: "8px", gap: "4px"}}>

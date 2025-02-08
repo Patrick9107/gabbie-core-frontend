@@ -21,7 +21,7 @@ function ProductCards({products, onDelete, onEdit}: Props) {
                         />
                         <CardMedia
                             component="img"
-                            image={product.imageUrl || "public/placeholder.svg"}
+                            image={product.imageUrl || "placeholder.svg"}
                             sx={{ height: 180, objectFit: "contain", padding: 2 }}
                         />
                         <CardContent sx={{ display: "flex", gap: "10px", mt: "auto", justifyContent: "center" }}>

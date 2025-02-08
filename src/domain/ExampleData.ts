@@ -61,7 +61,7 @@ export const product3: Product = {
     weight: 0.5,
     name: "Dosenbier",
     description: "500ml Bier in der Dose",
-    imageUrl: "public/vite.svg",
+    imageUrl: "vite.svg",
     container: container3
 };
 
