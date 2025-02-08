@@ -6,7 +6,8 @@ import LoginForm from './app/login/LoginForm.tsx';
 import CircularProgress from '@mui/material/CircularProgress'; // Import CircularProgress from MUI
 import Box from '@mui/material/Box';
 import { useAuth } from './app/login/AuthProvider.tsx';
-import  Logout  from './app/login/Logout.tsx'; // Box for centering the spinner
+import  Logout  from './app/login/Logout.tsx';
+import VehicleList from "./app/cars/carselection.tsx"; // Box for centering the spinner
 
 function AppRoutes() {
 
@@ -50,9 +51,11 @@ function AppRoutes() {
         <Route path="/login" element={<LoginForm />} />
         <Route element={<AppShell />}>
           <Route>
-            <Route path="/" element={isTokenValid ? <Dashboard /> : <Navigate to="/login" />} />
-            <Route path="/bestellungen" element={isTokenValid ? <ListOrders /> : <Navigate to="/login" />} />
+            <Route path="/" element={isTokenValid ? <Dashboard /> : <Navigate to="/bestellungen" />} />
+            <Route path="/bestellungen" element={isTokenValid ? <ListOrders /> : <Navigate to="/bestellungen" />} />
             <Route path="/logout" element={<Logout />} />
+              <Route path="/cars/carselection" element={<VehicleList />} />
+
           </Route>
         </Route>
       </Routes>
