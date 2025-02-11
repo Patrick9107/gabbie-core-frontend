@@ -7,7 +7,7 @@ import CircularProgress from '@mui/material/CircularProgress'; // Import Circula
 import Box from '@mui/material/Box';
 import { useAuth } from './app/login/AuthProvider.tsx';
 import  Logout  from './app/login/Logout.tsx';
-import VehicleList from "./app/cars/carselection.tsx";
+import VehicleList from "./app/cars/VehicleList.tsx";
 import ListProducts from "./app/products/ListProducts.tsx"; // Box for centering the spinner
 
 function AppRoutes() {
