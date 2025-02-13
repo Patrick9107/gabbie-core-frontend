@@ -6,16 +6,21 @@ import VehicleDialog from "./VehicleDialog.tsx";
 import VehicleCards from "./VehicleCards.tsx";
 import { Vehicle } from "../../domain/Vehicle.ts";
 import { VehicleStatus } from "../../domain/enums/VehicleStatus.ts";
+import {vehicle1, vehicle2, vehicle3, vehicle4} from "../../domain/ExampleData.ts";
 
 const defaultVehicle: Vehicle = {
     id: -1,
     licensePlate: "",
     capacity: 0,
-    status: VehicleStatus.AVAILABLE
+    status: VehicleStatus.Verfuegbar
 };
 
+const defaultVehicles = [
+    vehicle1, vehicle2, vehicle3, vehicle4
+]
+
 function VehicleList() {
-    const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+    const [vehicles, setVehicles] = useState<Vehicle[]>(defaultVehicles);
     const [isOpen, setOpen] = useState(false);
     const [edit, setEdit] = useState(false);
     const [newVehicle, setNewVehicle] = useState<Vehicle>(defaultVehicle);
