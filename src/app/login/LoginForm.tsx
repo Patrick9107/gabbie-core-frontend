@@ -9,7 +9,7 @@ import { useAuth } from './AuthProvider.tsx';
 
 const LoginForm = () => {
   const navigate = useNavigate();
-  const { setIsTokenValid } = useAuth(); // Access set function from context
+  const { setIsTokenValid, setRole } = useAuth(); // Access set function from context
 
   const { mutateAsync, status, error, isError } = useMutation({
     mutationFn: loginUser,
@@ -20,6 +20,7 @@ const LoginForm = () => {
       const role = decodedToken["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
 
       localStorage.setItem('role', role);
+      setRole(role);
       setIsTokenValid(true); // Set the token validity to true
       navigate('/');
     },
@@ -61,10 +62,10 @@ const LoginForm = () => {
           validate={(values) => {
             const errors: { username?: string; password?: string } = {};
             if (!values.username) {
-              errors.username = 'Username is required';
+              errors.username = 'Benutzername erforderlich';
             }
             if (!values.password) {
-              errors.password = 'Password is required';
+              errors.password = 'Passwort erforderlich';
             }
             return errors;
           }}
@@ -75,7 +76,7 @@ const LoginForm = () => {
               <Box mb={2}>
                 <TextField
                   fullWidth
-                  label="Username"
+                  label="Benutzername"
                   name="username"
                   value={values.username}
                   onChange={handleChange}
@@ -88,7 +89,7 @@ const LoginForm = () => {
               <Box mb={2}>
                 <TextField
                   fullWidth
-                  label="Password"
+                  label="Passwort"
                   name="password"
                   type="password"
                   value={values.password}

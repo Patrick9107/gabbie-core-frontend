@@ -11,7 +11,12 @@ export const loginUser = async (data: { username: string; password: string }): P
     });
     return response.data; // Expecting { token: 'abc123' }
   } catch (error) {
-    throw new Error(`Error: ${error}`);
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status ?? 'Unknown';
+      const message = error.response?.data?.message ?? error.message;
+      throw new Error(`Error ${status}: ${message}`);
+    }
+    throw new Error(`Unexpected error: ${error}`);
   }
 };
 
