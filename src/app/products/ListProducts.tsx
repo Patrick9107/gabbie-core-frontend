@@ -2,20 +2,16 @@ import {
     container1,
     container2,
     container3,
-    container4,
-    product1,
-    product2,
-    product3,
-    product4
+    container4
 } from "../../domain/ExampleData.ts";
 import ProductCards from "./ProductCards.tsx";
-import {Typography} from "@mui/material";
+import { Typography } from "@mui/material";
 import AddButton from "../../core/ui/AddButton.tsx";
-import {ChangeEvent, useState} from "react";
-import {Product} from "../../domain/Product.ts";
+import { ChangeEvent, useEffect, useState } from "react";
+import { Product } from "../../domain/Product.ts";
 import ProductDialog from "./ProductDialog.tsx";
 import DeleteConfirmationDialog from "../../core/ui/DeleteConfirmationDialog.tsx";
-
+import { fetchProducts, createProduct, updateProduct, deleteProduct } from "../../infra/api/productService.ts";
 
 const defaultProduct = {
     id: -1,
@@ -32,15 +28,17 @@ const containers = [
 ];
 
 function ListProducts() {
-
-    const [products, setProducts] = useState<Product[]>([
-        product1, product2, product3, product4
-    ]);
+    const [products, setProducts] = useState<Product[]>([]);
     const [isOpen, setOpen] = useState(false);
     const [edit, setEdit] = useState(false);
     const [newProduct, setNewProduct] = useState<Product>(defaultProduct);
     const [deleteConfirm, setDeleteConfirm] = useState(false);
-    const [productToDelete, setProductToDelete] = useState<number | null>();
+    const [productToDelete, setProductToDelete] = useState<number | null>(null);
+
+    // Fetch products on mount
+    useEffect(() => {
+        fetchProducts().then(setProducts).catch(console.error);
+    }, []);
 
     const handleClose = () => {
         setOpen(false);
@@ -48,27 +46,27 @@ function ListProducts() {
         setNewProduct(defaultProduct);
     }
 
-    const handleSubmit = () => {
-        let updatedProduct = newProduct;
-        if (newProduct.id === -1) {
-            updatedProduct = { ...newProduct, id: Math.max(...products.map(p => p.id), 0) + 1 };
-        }
+    const handleSubmit = async () => {
+        try {
+            let updatedProduct: Product;
 
-        setProducts((prevProducts) => {
             if (edit) {
-                return prevProducts.map(o => o.id === updatedProduct.id ? updatedProduct : o); // Aktualisiert Bestellung an derselben Position
+                updatedProduct = await updateProduct(newProduct);
+                setProducts((prevProducts) => prevProducts.map(p => p.id === updatedProduct.id ? updatedProduct : p));
+            } else {
+                updatedProduct = await createProduct(newProduct);
+                setProducts((prevProducts) => [...prevProducts, updatedProduct]);
             }
-            return [...prevProducts, updatedProduct];
-        });
 
-        setOpen(false);
-        setEdit(false);
-        setNewProduct(defaultProduct);
+            handleClose();
+        } catch (error) {
+            console.error(error);
+        }
     }
 
     const handleContainerChange = (containerId: number | null) => {
         const foundContainer = containers.find(c => c.id === containerId) ?? null;
-        setNewProduct({...newProduct, container: foundContainer});
+        setNewProduct({ ...newProduct, container: foundContainer });
     };
 
     const handleAdd = () => {
@@ -80,9 +78,14 @@ function ListProducts() {
         setProductToDelete(id);
     }
 
-    const handleDelete = () => {
+    const handleDelete = async () => {
         if (productToDelete) {
-            setProducts(products.filter(o => o.id !== productToDelete));
+            try {
+                await deleteProduct(productToDelete);
+                setProducts((prevProducts) => prevProducts.filter(o => o.id !== productToDelete));
+            } catch (error) {
+                console.error(error);
+            }
             setDeleteConfirm(false);
             setProductToDelete(null);
         }
@@ -104,24 +107,24 @@ function ListProducts() {
     }
 
     return (
-        <>
-            <Typography sx={{ fontWeight: "bold" }} variant="h4" gutterBottom> Produktübersicht </Typography>
-            <AddButton onClick={handleAdd}/>
-            <ProductCards products={products} onDelete={handleDeleteButtonClicked} onEdit={handleEdit}/>
+      <>
+          <Typography sx={{ fontWeight: "bold" }} variant="h4" gutterBottom> Produktübersicht </Typography>
+          <AddButton onClick={handleAdd}/>
+          <ProductCards products={products} onDelete={handleDeleteButtonClicked} onEdit={handleEdit}/>
 
-            <ProductDialog
-                open={isOpen}
-                edit={edit}
-                product={newProduct}
-                onClose={handleClose}
-                onSubmit={handleSubmit}
-                onChange={handleChange}
-                containers={containers}
-                onContainerChange={handleContainerChange}
-            />
+          <ProductDialog
+            open={isOpen}
+            edit={edit}
+            product={newProduct}
+            onClose={handleClose}
+            onSubmit={handleSubmit}
+            onChange={handleChange}
+            containers={containers}
+            onContainerChange={handleContainerChange}
+          />
 
-            <DeleteConfirmationDialog open={deleteConfirm} onClose={() => setDeleteConfirm(false)} onConfirm={handleDelete}/>
-        </>
+          <DeleteConfirmationDialog open={deleteConfirm} onClose={() => setDeleteConfirm(false)} onConfirm={handleDelete}/>
+      </>
     );
 }
 
