@@ -42,16 +42,17 @@ export const validateToken = async (): Promise<boolean> => {
 export const logout = async () => {
   try {
     const token = localStorage.getItem('authToken');
-
     if (!token) {
       throw new Error('No token found, cannot log out.');
     }
 
+
     await axios.post(
       'http://localhost:5120/api/auth/logout',
+      {},  // Empty body because only the Authorization header is needed
       {
         headers: {
-          Authorization: `Bearer ${token}`, // Pass the token in the Authorization header
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       }

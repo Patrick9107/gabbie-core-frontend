@@ -1,24 +1,22 @@
 import React, { useEffect } from 'react';
-import { Navigate } from 'react-router-dom'; // Import Navigate for redirecting after logout
+import { Navigate } from 'react-router-dom';
 import { useAuth } from './AuthProvider.tsx';
 import { logout } from '../../infra/api/authService.ts';
 
-
 const Logout: React.FC = () => {
-  const { setIsTokenValid } = useAuth(); // Use handleLogout from context
+  const { setIsTokenValid } = useAuth();
 
   useEffect(() => {
     const logoutUser = async () => {
       await logout();
+      setIsTokenValid(false);
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('role');
     };
 
     logoutUser();
-    setIsTokenValid(false)
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('role');
-  });
+  }, []);
 
-  // After logout, redirect the user to the login page
   return <Navigate to="/login" />;
 };
 

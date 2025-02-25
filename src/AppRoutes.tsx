@@ -14,22 +14,6 @@ function RequireAuth({ children }: { children: JSX.Element }) {
   const { isTokenValid, role } = useAuth();
   const location = useLocation();
 
-  if (isTokenValid === false) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-
-  //TODO change /driver to a valid DRIVERS ROUTE!!!!!!!!!!!
-  console.log(role);
-  if(role !== "Admin"){
-    return <Navigate to="/driver" state={{ from: location }} replace />
-  }
-  return children;
-}
-
-function AppRoutes() {
-  const { isTokenValid} = useAuth();
-
   if (isTokenValid === null) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -38,18 +22,29 @@ function AppRoutes() {
     );
   }
 
+  if (!isTokenValid) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  if (role !== "Admin") {
+    return <Navigate to="/driver" state={{ from: location }} replace />;
+  }
+
+  return children;
+}
+
+function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginForm />} />
+
         <Route element={<AppShell />}>
           <Route path="/" element={<RequireAuth><Dashboard /></RequireAuth>} />
           <Route path="/bestellungen" element={<RequireAuth><ListOrders /></RequireAuth>} />
           <Route path="/produkte" element={<RequireAuth><ListProducts /></RequireAuth>} />
           <Route path="/fahrzeuge" element={<RequireAuth><VehicleList /></RequireAuth>} />
           <Route path="/logout" element={<Logout />} />
-
-
         </Route>
       </Routes>
     </BrowserRouter>

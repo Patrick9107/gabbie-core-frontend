@@ -19,6 +19,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [role, setRole] = useState<string | null>(null);
 
   useEffect(() => {
+    if (location.pathname === "/login") {
+      return;
+    }
     const checkToken = async () => {
       const isValid = await validateToken();
       setIsTokenValid(isValid);
