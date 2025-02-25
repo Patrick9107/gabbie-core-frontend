@@ -37,8 +37,7 @@ export const fetchOrderById = async (id: number): Promise<Order | null> => {
 
 export const createOrder = async (order: Order): Promise<Order> => {
     try {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const {id, totalAmount, ...cleanOrder } = order;
+        const {id: _id, totalAmount: _totalAmount, ...cleanOrder } = order;
         const formattedOrderItems = cleanOrder.orderItems.map(item => ({ productId: item.product.id, quantity: item.quantity }));
         const newOrder = {
             ...cleanOrder,
@@ -55,7 +54,16 @@ export const createOrder = async (order: Order): Promise<Order> => {
 
 export const updateOrder = async (order: Order): Promise<Order> => {
     try {
-        const response = await axios.put<Order>(`${ORDERS_URL}/${order.id}`, order);
+        console.log(order);
+        const {id, totalAmount: _totalAmount, ...cleanOrder } = order;
+        const formattedOrderItems = cleanOrder.orderItems?.map(item => ({ productId: item.product.id, quantity: item.quantity }));
+        const newOrder = {
+            ...cleanOrder,
+            orderItems: formattedOrderItems,
+            orderStatus: order.orderStatus
+        }
+        // console.log(newOrder);
+        const response = await axios.put<Order>(`${ORDERS_URL}/${id}`, newOrder);
         return response.data;
     } catch (error) {
         throw new Error(`Error updating order with ID ${order.id}: ${axios.isAxiosError(error) ? error.response?.data?.message || error.message : error}`);

@@ -234,7 +234,7 @@ export const delivery1: Delivery = {
 
 export const delivery2: Delivery = {
     id: 2,
-    status: DeliveryStatus.Unterwewgs,
+    status: DeliveryStatus.Unterwegs,
     route: route2,
     vehicle: vehicle2,
     orders: [order3],
