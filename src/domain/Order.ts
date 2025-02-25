@@ -7,11 +7,13 @@ export interface Order extends BaseEntity {
     deliveryDate: Date | null;
     address: string;
     phoneNumber: string;
-    items: OrderItem[];
-    status: OrderStatus; //enum
+    orderItems: OrderItem[];
+    orderStatus: OrderStatus; //enum
     note: string;
     orderSource: OrderSource; //enum
-    deliveryTimeWindowStart: Date | null;
-    deliveryTimeWindowEnd: Date | null;
+    deliveryWindowStartDate: Date | null;
+    deliveryWindowEndDate: Date | null;
     totalAmount: number;
 }
+
+export type defaultOrder = Omit<Order, "id" | "totalAmount">;

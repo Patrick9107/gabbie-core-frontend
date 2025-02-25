@@ -1,8 +1,9 @@
 import { Order } from "../../domain/Order.ts";
-import { order1, order2, order3, order4, product1, product2, product3, product4 } from "../../domain/ExampleData.ts";
+import { product1, product2, product3, product4 } from "../../domain/ExampleData.ts";
 import AddButton from "../../core/ui/AddButton.tsx";
-import {ChangeEvent, useState} from "react";
+import {ChangeEvent, useEffect, useState} from "react";
 import { Product } from "../../domain/Product.ts";
+import {fetchOrders, deleteOrder, createOrder, updateOrder} from "../../infra/api/orderService.ts";
 import {Dayjs} from "dayjs";
 import DeleteConfirmationDialog from "../../core/ui/DeleteConfirmationDialog.tsx";
 import OrderTable from "./OrderTable.tsx";
@@ -19,21 +20,36 @@ const defaultOrder = {
     deliveryDate: null,
     address: "",
     phoneNumber: "",
-    items: [],
-    status: 1,
+    orderItems: [],
+    orderStatus: 1,
     note: "",
     orderSource: 1,
-    deliveryTimeWindowStart: null,
-    deliveryTimeWindowEnd: null,
+    deliveryWindowStartDate: null,
+    deliveryWindowEndDate: null,
     totalAmount: 0
 }
 
 function ListOrders() {
+
+    useEffect(() => {
+        const loadOrders = async () => {
+            try {
+                const fetchedOrders = await fetchOrders();
+                setOrders(fetchedOrders);
+            } catch (error) {
+                console.error("Failed to fetch orders:", error);
+            }
+        };
+
+        loadOrders();
+    }, []);
+
+
     const [isOpen, setIsOpen] = useState<boolean>(false);
     const [newOrderProducts, setNewOrderProducts] = useState<{ product: Product | null; quantity: number }[]>([]);
     const [newOrder, setNewOrder] = useState<Order>(defaultOrder);
     const [edit, setEdit] = useState<boolean>(false);
-    const [orders, setOrders] = useState<Order[]>([order1, order2, order3, order4]);
+    const [orders, setOrders] = useState<Order[]>([]);
     const [deleteConfirm, setDeleteConfirm] = useState<boolean>(false);
     const [orderToDelete, setOrderToDelete] = useState<number | null>(null);
     const [selectedVehicle, setSelectedVehicle] = useState<number | null>(null);
@@ -68,18 +84,12 @@ function ListOrders() {
     };
 
     const handleSubmit = () => {
-        let updatedOrder = newOrder;
 
-        if (newOrder.id === -1) {
-            updatedOrder = { ...newOrder, id: Math.max(0, ...orders.map(o => o.id)) + 1};
+        if (!edit) {
+            createOrder(newOrder).then(response => setOrders(prevState => [...prevState, response]));
+        } else {
+            updateOrder(newOrder).then(response => setOrders(prevState => [...prevState, response]));
         }
-
-        setOrders(prevOrders => {
-            if (edit) {
-                return prevOrders.map(o => o.id === updatedOrder.id ? updatedOrder : o);
-            }
-            return [...prevOrders, updatedOrder];
-        });
 
         setIsOpen(false);
         setEdit(false);
@@ -111,16 +121,14 @@ function ListOrders() {
         } else {
             console.error("Order is undefined");
         }
-        if (order?.items) {
-            setNewOrderProducts(order.items);
-        } else {
-            console.error("OrderItems is undefined");
+        if (order?.orderItems) {
+            setNewOrderProducts(order.orderItems);
         }
     }
 
     const handleDelete = () => {
         if (orderToDelete) {
-            setOrders(orders.filter(o => o.id !== orderToDelete));
+            deleteOrder(orderToDelete).then(() => setOrders(prevState => prevState.filter(o => o.id !== orderToDelete)));
             setDeleteConfirm(false);
             setOrderToDelete(null);
         }

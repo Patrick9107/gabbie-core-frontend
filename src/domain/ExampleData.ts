@@ -104,12 +104,12 @@ export const order1: Order = {
     deliveryDate: new Date("2025-02-10"),
     address: "Musterstraße 1, 1010 Wien",
     phoneNumber: "+43123456789",
-    items: [orderItem1, orderItem2],
-    status: OrderStatus.Ausstehend,
+    orderItems: [orderItem1, orderItem2],
+    orderStatus: OrderStatus.Ausstehend,
     note: "Klingeln, wenn niemand öffnet, anrufen",
     orderSource: OrderSource.WhatsApp,
-    deliveryTimeWindowStart: new Date("2025-02-10T09:00:00"),
-    deliveryTimeWindowEnd: new Date("2025-02-10T12:00:00"),
+    deliveryWindowStartDate: new Date("2025-02-10T09:00:00"),
+    deliveryWindowEndDate: new Date("2025-02-10T12:00:00"),
     totalAmount: 16.98
 };
 
@@ -118,12 +118,12 @@ export const order2: Order = {
     deliveryDate: new Date("2025-02-11"),
     address: "Hauptstraße 5, 4020 Linz",
     phoneNumber: "+437654321",
-    items: [orderItem3],
-    status: OrderStatus.Geliefert,
+    orderItems: [orderItem3],
+    orderStatus: OrderStatus.Geliefert,
     note: "Vor der Garage abstellen",
     orderSource: OrderSource.SMS,
-    deliveryTimeWindowStart: new Date("2025-02-11T13:00:00"),
-    deliveryTimeWindowEnd: new Date("2025-02-11T15:00:00"),
+    deliveryWindowStartDate: new Date("2025-02-11T13:00:00"),
+    deliveryWindowEndDate: new Date("2025-02-11T15:00:00"),
     totalAmount: 14.94
 };
 
@@ -132,12 +132,12 @@ export const order3: Order = {
     deliveryDate: new Date("2025-02-12"),
     address: "Marktplatz 10, 8010 Graz",
     phoneNumber: "+43316543210",
-    items: [orderItem4],
-    status: OrderStatus.Storniert,
+    orderItems: [orderItem4],
+    orderStatus: OrderStatus.Storniert,
     note: "Bestellung wurde storniert",
     orderSource: OrderSource.Anruf,
-    deliveryTimeWindowStart: new Date("2025-02-12T08:00:00"),
-    deliveryTimeWindowEnd: new Date("2025-02-12T10:00:00"),
+    deliveryWindowStartDate: new Date("2025-02-12T08:00:00"),
+    deliveryWindowEndDate: new Date("2025-02-12T10:00:00"),
     totalAmount: 11.97
 };
 
@@ -146,12 +146,12 @@ export const order4: Order = {
     deliveryDate: new Date("2025-02-13"),
     address: "Dorfstraße 20, 5020 Salzburg",
     phoneNumber: "+43662876543",
-    items: [orderItem1, orderItem3],
-    status: OrderStatus.Verschoben,
+    orderItems: [orderItem1, orderItem3],
+    orderStatus: OrderStatus.Verschoben,
     note: "Neuer Liefertermin am 15.02.",
     orderSource: OrderSource.Andere,
-    deliveryTimeWindowStart: new Date("2025-02-13T14:00:00"),
-    deliveryTimeWindowEnd: new Date("2025-02-13T16:00:00"),
+    deliveryWindowStartDate: new Date("2025-02-13T14:00:00"),
+    deliveryWindowEndDate: new Date("2025-02-13T16:00:00"),
     totalAmount: 31.92
 };
 

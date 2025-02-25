@@ -52,7 +52,7 @@ const OrderTable = ({ orders, onEdit, onDelete }: Props) => {
                             <TableCell>{order.phoneNumber}</TableCell>
                             <TableCell>{order.address}</TableCell>
                             <TableCell>{order.totalAmount}€</TableCell>
-                            <TableCell>{order.deliveryDate?.toLocaleDateString() ?? "nix"}</TableCell>
+                            <TableCell>{order.deliveryDate?.toLocaleString() ?? "nix"}</TableCell>
                         </TableRow>
                         <TableRow>
                             <TableCell colSpan={6} sx={{ paddingBottom: 0, paddingTop: 0, backgroundColor: "#f0f0f0" }}>
@@ -60,7 +60,7 @@ const OrderTable = ({ orders, onEdit, onDelete }: Props) => {
                                     <Box sx={{ margin: 2 }}>
                                         <h3>Weitere Details</h3>
                                         <ul>
-                                            <li> Status: {OrderStatus[order.status]} </li>
+                                            <li> Status: {OrderStatus[order.orderStatus]} </li>
                                             <li> Quelle: {OrderSource[order.orderSource]} </li>
                                             <li> Notiz: {order.note} </li>
                                         </ul>
@@ -73,7 +73,7 @@ const OrderTable = ({ orders, onEdit, onDelete }: Props) => {
                                                 </TableRow>
                                             </TableHead>
                                             <TableBody>
-                                                {order.items.map((item, index) => (
+                                                {order.orderItems?.map((item, index) => (
                                                     <TableRow key={index}>
                                                         <TableCell> {item.product.name} </TableCell>
                                                         <TableCell> {item.quantity} </TableCell>
@@ -82,7 +82,7 @@ const OrderTable = ({ orders, onEdit, onDelete }: Props) => {
                                                 ))}
                                                 <TableRow>
                                                     <TableCell sx={sumSx}>Summe</TableCell>
-                                                    <TableCell sx={sumSx}>{order.items.reduce((previousValue, currentValue) => previousValue + currentValue.quantity, 0)}</TableCell>
+                                                    <TableCell sx={sumSx}>{order.orderItems?.reduce((previousValue, currentValue) => previousValue + currentValue.quantity, 0)}</TableCell>
                                                     <TableCell sx={sumSx}>{order.totalAmount}€</TableCell>
                                                 </TableRow>
                                             </TableBody>

@@ -1,49 +1,80 @@
-// import {Order} from "../../domain/Order.ts";
-// import {OrderItem} from "../../domain/OrderItem.ts";
-// import {OrderStatus} from "../../domain/enums/OrderStatus.ts";
-// import {OrderSource} from "../../domain/enums/OrderSource.ts";
-//
-// const url: string = "https://localhost:7160/api/Order";
-//
-// const fetchOrders = async (): Promise<Order[]> => {
-//     const response = await fetch(url);
-//     const data: Order[] = await response.json(); // JSON is already parsed
-//     console.log(data); // Log raw data for debugging
-//
-//     return data.map((order: Order) => ({
-//         id: order.id,
-//         deliveryDate: new Date(order.deliveryDate),
-//         address: order.address,
-//         phoneNumber: order.phoneNumber,
-//         items: order.items.map((item: OrderItem) => ({
-//             id: item.id,
-//             product: {
-//                 id: item.product.id,
-//                 price: item.product.price,
-//                 weight: item.product.weight,
-//                 name: item.product.name,
-//                 description: item.product.description,
-//                 imageUrl: item.product.imageUrl,
-//                 container: {
-//                     id: item.product.container.id,
-//                     type: item.product.container.type,
-//                     depositAmount: item.product.container.depositAmount
-//                 }
-//             },
-//             quantity: item.quantity
-//         })) as OrderItem[],
-//         status: order.status as OrderStatus,
-//         note: order.note,
-//         orderSource: order.orderSource as OrderSource,
-//         deliveryTimeWindowStart: new Date(order.deliveryTimeWindowStart),
-//         deliveryTimeWindowEnd: new Date(order.deliveryTimeWindowEnd),
-//         totalAmount: order.totalAmount
-//     }));
-// };
-//
-// let orders: Order[];
-//
-// // Usage: Call the function and use the result
-// fetchOrders().then((order) => {
-//     orders = order;
-// });
+import axios from "axios";
+import { Order } from "../../domain/Order.ts";
+import { API_BASE_URL } from "../../../apiConfig.ts";
+
+const ORDERS_URL = `${API_BASE_URL}/Order`;
+
+export const fetchOrders = async (): Promise<Order[]> => {
+    try {
+        const response = await axios.get<Order[]>(ORDERS_URL);
+        console.log(response.data); // Debugging
+        return response.data.map((order) => ({
+            ...order,
+            deliveryDate: order.deliveryDate && new Date(order.deliveryDate),
+            deliveryTimeWindowStart: order.deliveryWindowStartDate && new Date(order.deliveryWindowStartDate),
+            deliveryTimeWindowEnd: order.deliveryWindowEndDate && new Date(order.deliveryWindowEndDate),
+        }));
+    } catch (error) {
+        handleError(error);
+        return [];
+    }
+};
+
+export const fetchOrderById = async (id: number): Promise<Order | null> => {
+    try {
+        const response = await axios.get<Order>(`${ORDERS_URL}/${id}`);
+        return {
+            ...response.data,
+            deliveryDate: response.data.deliveryDate && new Date(response.data.deliveryDate),
+            deliveryWindowStartDate: response.data.deliveryWindowStartDate && new Date(response.data.deliveryWindowStartDate),
+            deliveryWindowEndDate: response.data.deliveryWindowEndDate && new Date(response.data.deliveryWindowEndDate),
+        };
+    } catch (error) {
+        throw new Error(`Error fetching order with ID ${id}: ${error}`);
+        return null;
+    }
+};
+
+export const createOrder = async (order: Order): Promise<Order> => {
+    try {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const {id, totalAmount, ...cleanOrder } = order;
+        const formattedOrderItems = cleanOrder.orderItems.map(item => ({ productId: item.product.id, quantity: item.quantity }));
+        const newOrder = {
+            ...cleanOrder,
+            orderItems: formattedOrderItems,
+            orderStatus: order.orderStatus
+        }
+        console.log(newOrder);
+        const response = await axios.post<Order>(ORDERS_URL, newOrder);
+        return response.data;
+    } catch (error) {
+        throw new Error(`Error creating order: ${axios.isAxiosError(error) ? error.response?.data?.message || error.message : error}`);
+    }
+};
+
+export const updateOrder = async (order: Order): Promise<Order> => {
+    try {
+        const response = await axios.put<Order>(`${ORDERS_URL}/${order.id}`, order);
+        return response.data;
+    } catch (error) {
+        throw new Error(`Error updating order with ID ${order.id}: ${axios.isAxiosError(error) ? error.response?.data?.message || error.message : error}`);
+    }
+};
+
+export const deleteOrder = async (id: number): Promise<void> => {
+    try {
+        await axios.delete(`${ORDERS_URL}/${id}`);
+    } catch (error) {
+        throw new Error(`Error deleting order with ID ${id}: ${error}`);
+    }
+};
+
+const handleError = (error: unknown): never => {
+    if (axios.isAxiosError(error)) {
+        const status = error.response?.status ?? 'Unknown';
+        const message = error.response?.data?.message ?? error.message;
+        throw new Error(`Error ${status}: ${message}`);
+    }
+    throw new Error(`Unexpected error: ${error}`);
+};
