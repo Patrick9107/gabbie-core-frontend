@@ -13,7 +13,4 @@ export interface Order extends BaseEntity {
     orderSource: OrderSource; //enum
     deliveryWindowStartDate: Date | null;
     deliveryWindowEndDate: Date | null;
-    totalAmount: number;
 }
-
-export type defaultOrder = Omit<Order, "id" | "totalAmount">;

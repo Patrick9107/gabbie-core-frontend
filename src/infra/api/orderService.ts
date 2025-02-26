@@ -1,18 +1,19 @@
 import axios from "axios";
 import { Order } from "../../domain/Order.ts";
 import { API_BASE_URL } from "../../../apiConfig.ts";
+import {OrderResponse} from "../../domain/OrderResponse.ts";
 
 const ORDERS_URL = `${API_BASE_URL}/Order`;
 
-export const fetchOrders = async (): Promise<Order[]> => {
+export const fetchOrders = async (): Promise<OrderResponse[]> => {
     try {
-        const response = await axios.get<Order[]>(ORDERS_URL);
+        const response = await axios.get<OrderResponse[]>(ORDERS_URL);
         console.log(response.data); // Debugging
         return response.data.map((order) => ({
             ...order,
             deliveryDate: order.deliveryDate && new Date(order.deliveryDate),
-            deliveryTimeWindowStart: order.deliveryWindowStartDate && new Date(order.deliveryWindowStartDate),
-            deliveryTimeWindowEnd: order.deliveryWindowEndDate && new Date(order.deliveryWindowEndDate),
+            deliveryWindowStartDate: order.deliveryWindowStartDate && new Date(order.deliveryWindowStartDate),
+            deliveryWindowEndDate: order.deliveryWindowEndDate && new Date(order.deliveryWindowEndDate),
         }));
     } catch (error) {
         handleError(error);
@@ -31,13 +32,12 @@ export const fetchOrderById = async (id: number): Promise<Order | null> => {
         };
     } catch (error) {
         throw new Error(`Error fetching order with ID ${id}: ${error}`);
-        return null;
     }
 };
 
-export const createOrder = async (order: Order): Promise<Order> => {
+export const createOrder = async (order: Order): Promise<OrderResponse> => {
     try {
-        const {id: _id, totalAmount: _totalAmount, ...cleanOrder } = order;
+        const {id: _id, ...cleanOrder } = order;
         const formattedOrderItems = cleanOrder.orderItems.map(item => ({ productId: item.product.id, quantity: item.quantity }));
         const newOrder = {
             ...cleanOrder,
@@ -45,25 +45,24 @@ export const createOrder = async (order: Order): Promise<Order> => {
             orderStatus: order.orderStatus
         }
         console.log(newOrder);
-        const response = await axios.post<Order>(ORDERS_URL, newOrder);
+        const response = await axios.post<OrderResponse>(ORDERS_URL, newOrder);
         return response.data;
     } catch (error) {
         throw new Error(`Error creating order: ${axios.isAxiosError(error) ? error.response?.data?.message || error.message : error}`);
     }
 };
 
-export const updateOrder = async (order: Order): Promise<Order> => {
+export const updateOrder = async (order: OrderResponse): Promise<OrderResponse> => {
     try {
-        console.log(order);
-        const {id, totalAmount: _totalAmount, ...cleanOrder } = order;
+        const {totalAmount: _totalAmount, createdAt: _createdAt, updatedAt: _updatedAt, id, ...cleanOrder } = order;
         const formattedOrderItems = cleanOrder.orderItems?.map(item => ({ productId: item.product.id, quantity: item.quantity }));
         const newOrder = {
             ...cleanOrder,
             orderItems: formattedOrderItems,
             orderStatus: order.orderStatus
         }
-        // console.log(newOrder);
-        const response = await axios.put<Order>(`${ORDERS_URL}/${id}`, newOrder);
+        console.log(newOrder);
+        const response = await axios.put<OrderResponse>(`${ORDERS_URL}/${id}`, newOrder);
         return response.data;
     } catch (error) {
         throw new Error(`Error updating order with ID ${order.id}: ${axios.isAxiosError(error) ? error.response?.data?.message || error.message : error}`);

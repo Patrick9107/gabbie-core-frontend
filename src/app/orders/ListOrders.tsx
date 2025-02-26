@@ -1,4 +1,3 @@
-import { Order } from "../../domain/Order.ts";
 import { product1, product2, product3, product4 } from "../../domain/ExampleData.ts";
 import AddButton from "../../core/ui/AddButton.tsx";
 import {ChangeEvent, useEffect, useState} from "react";
@@ -9,13 +8,14 @@ import DeleteConfirmationDialog from "../../core/ui/DeleteConfirmationDialog.tsx
 import OrderTable from "./OrderTable.tsx";
 import OrderDialog from "./OrderDialog.tsx";
 import {Typography} from "@mui/material";
+import {OrderResponse} from "../../domain/OrderResponse.ts";
 
 
 const availableProducts: Product[] = [
    product1, product2, product3, product4
 ];
 
-const defaultOrder = {
+const defaultOrder: OrderResponse = {
     id: -1,
     deliveryDate: null,
     address: "",
@@ -26,8 +26,18 @@ const defaultOrder = {
     orderSource: 1,
     deliveryWindowStartDate: null,
     deliveryWindowEndDate: null,
-    totalAmount: 0
+    totalAmount: 0,
+    createdAt: null,
+    updatedAt: null,
 }
+
+/* todo
+// grundsätzlich funktioniert die api aber es sind noch einige dinge zu tun:
+// Ein paar felder dürfen nicht leer gelassen werden (z.b. telefonnummer, 1 produkt muss mindestens hinzugefügt werden, etc.)
+// Fahrzeugauswahl (ist keine priorität, kann später gemacht werden. oder vielleicht sogar garnicht ka ob wir es überhaupt brauchen)
+// Produkte werden noch nicht bei der api mitgeschickt
+// wenn error kommt sollte er irgendwo anders als in der konsole ersichtlich sein
+*/
 
 function ListOrders() {
 
@@ -47,9 +57,9 @@ function ListOrders() {
 
     const [isOpen, setIsOpen] = useState<boolean>(false);
     const [newOrderProducts, setNewOrderProducts] = useState<{ product: Product | null; quantity: number }[]>([]);
-    const [newOrder, setNewOrder] = useState<Order>(defaultOrder);
+    const [newOrder, setNewOrder] = useState<OrderResponse>(defaultOrder);
     const [edit, setEdit] = useState<boolean>(false);
-    const [orders, setOrders] = useState<Order[]>([]);
+    const [orders, setOrders] = useState<OrderResponse[]>([]);
     const [deleteConfirm, setDeleteConfirm] = useState<boolean>(false);
     const [orderToDelete, setOrderToDelete] = useState<number | null>(null);
     const [selectedVehicle, setSelectedVehicle] = useState<number | null>(null);
@@ -80,7 +90,7 @@ function ListOrders() {
     };
 
     const handleDateChange = (e: Dayjs | null) => {
-        setNewOrder({ ...newOrder, deliveryDate: e ? e.toDate() : null });
+        setNewOrder({ ...newOrder, deliveryDate: e && e.toDate() });
     };
 
     const handleSubmit = () => {
@@ -88,7 +98,9 @@ function ListOrders() {
         if (!edit) {
             createOrder(newOrder).then(response => setOrders(prevState => [...prevState, response]));
         } else {
-            updateOrder(newOrder).then(response => setOrders(prevState => [...prevState, response]));
+            updateOrder(newOrder).then(response => setOrders(prevState =>
+                prevState.map(order => order.id === response.id ? response : order)
+            ));
         }
 
         setIsOpen(false);
