@@ -1,7 +1,6 @@
-import {BaseEntity} from "./BaseEntity.ts";
 import {Product} from "./Product.ts";
 
-export interface OrderItem extends BaseEntity {
+export interface OrderItem {
     product: Product;
     quantity: number;
 }

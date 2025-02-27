@@ -1,4 +1,3 @@
-import { product1, product2, product3, product4 } from "../../domain/ExampleData.ts";
 import AddButton from "../../core/ui/AddButton.tsx";
 import {ChangeEvent, useEffect, useState} from "react";
 import { Product } from "../../domain/Product.ts";
@@ -9,11 +8,9 @@ import OrderTable from "./OrderTable.tsx";
 import OrderDialog from "./OrderDialog.tsx";
 import {Typography} from "@mui/material";
 import {OrderResponse} from "../../domain/OrderResponse.ts";
+import {OrderItem} from "../../domain/OrderItem.ts";
+import {fetchProducts} from "../../infra/api/productService.ts";
 
-
-const availableProducts: Product[] = [
-   product1, product2, product3, product4
-];
 
 const defaultOrder: OrderResponse = {
     id: -1,
@@ -33,9 +30,9 @@ const defaultOrder: OrderResponse = {
 
 /* todo
 // grundsätzlich funktioniert die api aber es sind noch einige dinge zu tun:
-// Ein paar felder dürfen nicht leer gelassen werden (z.b. telefonnummer, 1 produkt muss mindestens hinzugefügt werden, etc.)
-// Fahrzeugauswahl (ist keine priorität, kann später gemacht werden. oder vielleicht sogar garnicht ka ob wir es überhaupt brauchen)
-// Produkte werden noch nicht bei der api mitgeschickt
+// Ein paar felder dürfen nicht leer gelassen werden (z.b. telefonnummer, 1 produkt muss mindestens hinzugefügt werden, etc., edit: bzw. dürfen sie schon leergelassen werden aber wenn was fehlt sollte ja irgendwie es orange oder so markiert werden)
+// Fahrzeugauswahl (ist keine priorität, kann später gemacht werden. oder vielleicht sogar garnicht ka ob wir es überhaupt brauchen, edit: habs mal weggemacht glaube das brauchen wir hier nicht)
+// Produkte werden noch nicht bei der api mitgeschickt ✅
 // wenn error kommt sollte er irgendwo anders als in der konsole ersichtlich sein
 */
 
@@ -51,7 +48,17 @@ function ListOrders() {
             }
         };
 
+        const loadProducts = async () => {
+            try {
+                const fetchedProducts = await fetchProducts();
+                setAvailableProducts(fetchedProducts);
+            } catch (error) {
+                console.error("Failed to fetch products:", error);
+            }
+        }
+
         loadOrders();
+        loadProducts();
     }, []);
 
 
@@ -62,7 +69,8 @@ function ListOrders() {
     const [orders, setOrders] = useState<OrderResponse[]>([]);
     const [deleteConfirm, setDeleteConfirm] = useState<boolean>(false);
     const [orderToDelete, setOrderToDelete] = useState<number | null>(null);
-    const [selectedVehicle, setSelectedVehicle] = useState<number | null>(null);
+    const [selectedOrderSource, setSelectedOrderSource] = useState<number | null>(null);
+    const [availableProducts, setAvailableProducts] = useState<Product[]>([]);
 
     const handleAddOrderItem = () => {
         setNewOrderProducts([...newOrderProducts, { product: null, quantity: 1 }]);
@@ -95,10 +103,23 @@ function ListOrders() {
 
     const handleSubmit = () => {
 
+        const mappedOrderItems = newOrderProducts
+            .filter(value => value !== null)
+            .map(value => ({
+                product: value.product,
+                quantity: value.quantity
+            }));
+
+        const updatedOrder = {
+            ...newOrder,
+            orderItems: mappedOrderItems as unknown as OrderItem[],
+            orderSource: selectedOrderSource ?? 0
+        }
+
         if (!edit) {
-            createOrder(newOrder).then(response => setOrders(prevState => [...prevState, response]));
+            createOrder(updatedOrder).then(response => setOrders(prevState => [...prevState, response]));
         } else {
-            updateOrder(newOrder).then(response => setOrders(prevState =>
+            updateOrder(updatedOrder).then(response => setOrders(prevState =>
                 prevState.map(order => order.id === response.id ? response : order)
             ));
         }
@@ -107,7 +128,7 @@ function ListOrders() {
         setEdit(false);
         setNewOrder(defaultOrder);
         setNewOrderProducts([]);
-        setSelectedVehicle(null);
+        setSelectedOrderSource(null);
     };
 
 
@@ -116,12 +137,11 @@ function ListOrders() {
         setNewOrderProducts([]);
         setNewOrder(defaultOrder);
         setEdit(false);
-        setSelectedVehicle(null);
+        setSelectedOrderSource(null);
     }
 
-    const handleVehicleChange = (id: number) => {
-        setSelectedVehicle(id);
-        console.log(selectedVehicle);
+    const handleOrderSourceChange = (id: number) => {
+        setSelectedOrderSource(id);
     }
 
     const handleEditButtonClicked = (id: number) => {
@@ -167,15 +187,15 @@ function ListOrders() {
                 onSubmit={handleSubmit}
                 onChange={handleChange}
                 onDateChange={handleDateChange}
-                onVehicleChange={handleVehicleChange}
-                selectedVehicle={selectedVehicle}
+                onOrderSourceChange={handleOrderSourceChange}
+                selectedOrderSource={selectedOrderSource}
                 onAddProduct={handleAddOrderItem}
                 onDeleteProduct={handleDeleteProduct}
                 onProductChange={handleProductChange}
                 onQuantityChange={handleQuantityChange}
             />
 
-            <DeleteConfirmationDialog open={deleteConfirm} onClose={() => setDeleteConfirm(false)} onConfirm={() => handleDelete()} />
+            <DeleteConfirmationDialog open={deleteConfirm} onClose={() => setDeleteConfirm(false)} onConfirm={handleDelete} />
         </>
     );
 }

@@ -7,8 +7,7 @@ import { ChangeEvent } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import dayjs, { Dayjs } from "dayjs";
-import {vehicle1, vehicle2, vehicle3, vehicle4} from "../../domain/ExampleData.ts";
-import {Vehicle} from "../../domain/Vehicle.ts";
+import {OrderSource} from "../../domain/enums/OrderSource.ts";
 
 interface Props {
     open: boolean;
@@ -21,18 +20,14 @@ interface Props {
     onChange: (e: ChangeEvent<HTMLInputElement>) => void;
     onDateChange: (date: Dayjs | null) => void;
     onAddProduct: () => void;
-    onVehicleChange: (id: number) => void;
-    selectedVehicle: number | null;
+    onOrderSourceChange: (id: number) => void;
+    selectedOrderSource: number | null;
     onDeleteProduct: (index: number) => void;
     onProductChange: (index: number, productId: number) => void;
     onQuantityChange: (index: number, quantity: number) => void;
 }
 
-const vehicles: Vehicle[] = [
-  vehicle1, vehicle2, vehicle3, vehicle4
-];
-
-const OrderDialog = ({ open, edit, order, products, orderItems, onClose, onSubmit, onChange, onDateChange, onAddProduct, onVehicleChange, selectedVehicle, onDeleteProduct, onProductChange, onQuantityChange }: Props) => {
+const OrderDialog = ({ open, edit, order, products, orderItems, onClose, onSubmit, onChange, onDateChange, onAddProduct, onOrderSourceChange, selectedOrderSource, onDeleteProduct, onProductChange, onQuantityChange }: Props) => {
     return (
         <Dialog open={open} onClose={onClose}>
             <DialogTitle>{edit ? "Bestellung bearbeiten" : "Neue Bestellung"}</DialogTitle>
@@ -43,12 +38,21 @@ const OrderDialog = ({ open, edit, order, products, orderItems, onClose, onSubmi
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
                         <DatePicker label="Lieferdatum (optional)" value={order.deliveryDate ? dayjs(order.deliveryDate) : null} onChange={onDateChange} />
                     </LocalizationProvider>
-                    <Select value={selectedVehicle ?? ""} onChange={(e) => onVehicleChange(Number(e.target.value))} displayEmpty>
-                        <MenuItem value="">Work in Progress</MenuItem>
-                        {vehicles.map(vehicle => (
-                            <MenuItem key={vehicle.id} value={vehicle.id} disabled>{vehicle.licensePlate}</MenuItem>
-                        ))}
+                    {/*<Select value={selectedVehicle ?? ""} onChange={(e) => onVehicleChange(Number(e.target.value))} displayEmpty>*/}
+                    {/*    <MenuItem value="">Work in Progress</MenuItem>*/}
+                    {/*    {vehicles.map(vehicle => (*/}
+                    {/*        <MenuItem key={vehicle.id} value={vehicle.id} disabled>{vehicle.licensePlate}</MenuItem>*/}
+                    {/*    ))}*/}
+                    {/*</Select>*/}
+                    <Select value={selectedOrderSource ?? ""} onChange={(e) => onOrderSourceChange(Number(e.target.value))} displayEmpty fullWidth sx={{width: "50%"}}>
+                        <MenuItem value="" disabled>Quelle auswählen</MenuItem>
+                        {Object.entries(OrderSource)
+                            .filter(([_key, value]) => !isNaN(Number(value)))
+                            .map(([key, value]) => (
+                                <MenuItem key={value} value={value}>{key}</MenuItem>
+                            ))}
                     </Select>
+
                 </Box>
                 <TextField label="Notiz (optional)" name="note" value={order.note} multiline rows={3} variant="outlined" fullWidth sx={{ marginY: "4px" }} onChange={onChange} />
                 <Table>

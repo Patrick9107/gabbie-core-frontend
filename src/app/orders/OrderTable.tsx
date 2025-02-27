@@ -1,4 +1,3 @@
-import { Order } from "../../domain/Order.ts";
 import {Table, TableBody, TableCell, TableHead, TableRow, IconButton, Collapse, Box, Button} from "@mui/material";
 import { KeyboardArrowDown, KeyboardArrowUp } from "@mui/icons-material";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -6,9 +5,10 @@ import EditIcon from '@mui/icons-material/Edit';
 import { useState, Fragment } from "react";
 import { OrderStatus } from "../../domain/enums/OrderStatus.ts";
 import { OrderSource } from "../../domain/enums/OrderSource.ts";
+import {OrderResponse} from "../../domain/OrderResponse.ts";
 
 interface Props {
-    orders: Order[];
+    orders: OrderResponse[];
     onEdit: (id: number) => void;
     onDelete: (id: number) => void;
 }
@@ -52,7 +52,7 @@ const OrderTable = ({ orders, onEdit, onDelete }: Props) => {
                             <TableCell>{order.phoneNumber}</TableCell>
                             <TableCell>{order.address}</TableCell>
                             <TableCell>{order.totalAmount}€</TableCell>
-                            <TableCell>{order.deliveryDate?.toLocaleString() ?? "nix"}</TableCell>
+                            <TableCell>{order?.deliveryDate ? new Date(order.deliveryDate).getTime() ? new Date(order.deliveryDate).toLocaleDateString() : "Kein Lieferdatum angegeben" : "Kein Lieferdatum angegeben"}</TableCell>
                         </TableRow>
                         <TableRow>
                             <TableCell colSpan={6} sx={{ paddingBottom: 0, paddingTop: 0, backgroundColor: "#f0f0f0" }}>
