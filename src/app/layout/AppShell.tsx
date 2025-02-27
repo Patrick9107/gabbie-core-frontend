@@ -28,6 +28,7 @@ function AppShell()  {
         { text: 'Dashboard', link: '/', icon: <DashboardIcon /> },
         { text: 'Bestellungsübersicht', link: '/bestellungen', icon: <LocalMallIcon /> },
         { text: 'Produkte', link: '/produkte', icon: <CategoryIcon /> },
+        { text: 'Routenplanung', link: '/routes'},
         { text: 'Fahrzeuge', link: '/fahrzeuge', icon: <LocalShippingIcon /> },
         { text: 'Logout', link: '/logout', icon: <ExitToAppIcon /> }
     ];
