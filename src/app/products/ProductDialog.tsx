@@ -20,7 +20,7 @@ interface Props {
     onContainerChange: (containerId: number | null) => void;
 }
 
-function ProductDialog({open, edit, product, onClose, onSubmit, onChange, containers, onContainerChange}: Props) {
+function ProductDialog({open, edit, product, onClose, onSubmit, onChange, onContainerChange, containers}: Props) {
 
     return (
         <Dialog open={open} onClose={onClose}>
@@ -29,17 +29,17 @@ function ProductDialog({open, edit, product, onClose, onSubmit, onChange, contai
                 <TextField
                     label="Name"
                     name="name"
-                    value={product.name}
                     fullWidth
                     margin="dense"
                     onChange={onChange}
+                    value={product.name}
                 />
                 <Box sx={{ display: "flex", gap: "8px", marginY: "4px" }}>
                     <TextField
                         label="Preis"
                         name="price"
                         type="number"
-                        value={edit ? product.price : null}
+                        value={product.price}
                         fullWidth
                         margin="dense"
                         onChange={onChange}
@@ -48,7 +48,7 @@ function ProductDialog({open, edit, product, onClose, onSubmit, onChange, contai
                         label="Gewicht"
                         name="weight"
                         type="number"
-                        value={edit ? product.weight : null}
+                        value={product.weight}
                         fullWidth
                         margin="dense"
                         onChange={onChange}

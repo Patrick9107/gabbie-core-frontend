@@ -19,7 +19,7 @@ const defaultProduct = {
     weight: 0,
     name: "",
     description: "",
-    imageUrl: null,
+    imageUrl: "",
     container: undefined
 }
 
