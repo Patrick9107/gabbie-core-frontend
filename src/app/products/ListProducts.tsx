@@ -1,9 +1,4 @@
-import {
-    container1,
-    container2,
-    container3,
-    container4
-} from "../../domain/ExampleData.ts";
+
 import ProductCards from "./ProductCards.tsx";
 import { Typography } from "@mui/material";
 import AddButton from "../../core/ui/AddButton.tsx";
@@ -12,6 +7,8 @@ import { Product } from "../../domain/Product.ts";
 import ProductDialog from "./ProductDialog.tsx";
 import DeleteConfirmationDialog from "../../core/ui/DeleteConfirmationDialog.tsx";
 import { fetchProducts, createProduct, updateProduct, deleteProduct } from "../../infra/api/productService.ts";
+import { fetchContainers } from '../../infra/api/containerService.ts';
+import { Container } from '../../domain/Container.ts';
 
 const defaultProduct = {
     id: -1,
@@ -23,14 +20,12 @@ const defaultProduct = {
     container: undefined
 }
 
-const containers = [
-    container1, container2, container3, container4
-];
 
 function ListProducts() {
     const [products, setProducts] = useState<Product[]>([]);
     const [isOpen, setOpen] = useState(false);
     const [edit, setEdit] = useState(false);
+    const [containers,  setContainers ] = useState<Container[]>([]);
     const [newProduct, setNewProduct] = useState<Product>(defaultProduct);
     const [deleteConfirm, setDeleteConfirm] = useState(false);
     const [productToDelete, setProductToDelete] = useState<number | null>(null);
@@ -38,6 +33,7 @@ function ListProducts() {
     // Fetch products on mount
     useEffect(() => {
         fetchProducts().then(setProducts).catch(console.error);
+        fetchContainers().then(setContainers).catch(console.error)
     }, []);
 
     const handleClose = () => {
