@@ -1,4 +1,4 @@
-import { useState, ChangeEvent } from "react";
+import {useState, ChangeEvent, useEffect} from "react";
 import { Typography } from "@mui/material";
 import AddButton from "../../core/ui/AddButton.tsx";
 import DeleteConfirmationDialog from "../../core/ui/DeleteConfirmationDialog.tsx";
@@ -6,7 +6,7 @@ import VehicleDialog from "./VehicleDialog.tsx";
 import VehicleCards from "./VehicleCards.tsx";
 import { Vehicle } from "../../domain/Vehicle.ts";
 import { VehicleStatus } from "../../domain/enums/VehicleStatus.ts";
-import {vehicle1, vehicle2, vehicle3, vehicle4} from "../../domain/ExampleData.ts";
+import {fetchVehicles, createVehicle, deleteVehicle, updateVehicle} from "../../infra/api/vehicleService.ts";
 
 const defaultVehicle: Vehicle = {
     id: -1,
@@ -15,12 +15,22 @@ const defaultVehicle: Vehicle = {
     status: VehicleStatus.Verfuegbar
 };
 
-const defaultVehicles = [
-    vehicle1, vehicle2, vehicle3, vehicle4
-]
-
 function VehicleList() {
-    const [vehicles, setVehicles] = useState<Vehicle[]>(defaultVehicles);
+
+    useEffect(() => {
+        const loadVehicles = async () => {
+            try {
+                const fetchedVehicles = await fetchVehicles();
+                setVehicles(fetchedVehicles);
+            } catch (error) {
+                console.error("Failed to fetch orders:", error);
+            }
+        };
+
+        loadVehicles();
+    }, []);
+
+    const [vehicles, setVehicles] = useState<Vehicle[]>([]);
     const [isOpen, setOpen] = useState(false);
     const [edit, setEdit] = useState(false);
     const [newVehicle, setNewVehicle] = useState<Vehicle>(defaultVehicle);
@@ -34,25 +44,18 @@ function VehicleList() {
     };
 
     const handleSubmit = () => {
-        let updatedVehicle = newVehicle;
-        if (newVehicle.id === -1) {
-            updatedVehicle = { ...newVehicle, id: Math.max(...vehicles.map(v => v.id), 0) + 1 };
-        }
 
-        setVehicles((prevVehicles) => {
-            if (edit) {
-                return prevVehicles.map(v => v.id === updatedVehicle.id ? updatedVehicle : v);
-            }
-            return [...prevVehicles, updatedVehicle];
-        });
+        if (!edit) {
+            createVehicle(newVehicle).then(response => setVehicles(prevState => [...prevState, response]));
+        } else {
+            updateVehicle(newVehicle).then(response => setVehicles(prevState =>
+                prevState.map(vehicle => vehicle.id === response.id ? response : vehicle)
+            ));
+        }
 
         setOpen(false);
         setEdit(false);
         setNewVehicle(defaultVehicle);
-    };
-
-    const handleStatusChange = (status: VehicleStatus) => {
-        setNewVehicle({ ...newVehicle, status });
     };
 
     const handleAdd = () => {
@@ -65,8 +68,8 @@ function VehicleList() {
     };
 
     const handleDelete = () => {
-        if (vehicleToDelete !== null) {
-            setVehicles(vehicles.filter(v => v.id !== vehicleToDelete));
+        if (vehicleToDelete) {
+            deleteVehicle(vehicleToDelete).then(() => setVehicles(prevState => prevState.filter(o => o.id !== vehicleToDelete)));
             setDeleteConfirm(false);
             setVehicleToDelete(null);
         }
@@ -100,7 +103,6 @@ function VehicleList() {
                 onClose={handleClose}
                 onSubmit={handleSubmit}
                 onChange={handleChange}
-                onStatusChange={handleStatusChange}
             />
 
             <DeleteConfirmationDialog open={deleteConfirm} onClose={() => setDeleteConfirm(false)} onConfirm={handleDelete} />

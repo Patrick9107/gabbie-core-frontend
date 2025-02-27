@@ -22,7 +22,7 @@ function VehicleCards({ vehicles, onDelete, onEdit }: Props) {
                         />
                         <CardMedia
                             component="img"
-                            image={"/public/kumbolderkombi.png"}  // Fallback auf Standardbild
+                            image={"kumbolderkombi.png"}  // Fallback auf Standardbild
                             sx={{ height: 100, objectFit: "contain", padding: 2 }}
                         />
                         <CardContent sx={{ display: "flex", gap: "10px", mt: "auto", justifyContent: "center", flexShrink: 0 }}>
