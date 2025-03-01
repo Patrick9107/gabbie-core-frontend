@@ -4,7 +4,7 @@ import ListOrders from "./app/orders/ListOrders";
 import Dashboard from "./app/old_dashboard/Dashboard";
 import LoginForm from './app/login/LoginForm';
 import Logout from './app/login/Logout';
-import VehicleList from "./app/cars/VehicleList";
+import VehicleList from "./app/vehicle/VehicleList";
 import ListProducts from "./app/products/ListProducts";
 import RoutesPage from "./app/routes/Routes.tsx";
 import CircularProgress from '@mui/material/CircularProgress';
