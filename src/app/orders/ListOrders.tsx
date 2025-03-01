@@ -153,6 +153,9 @@ function ListOrders() {
         } else {
             console.error("Order is undefined");
         }
+        if (order?.orderSource.valueOf() !== 0) {
+            setSelectedOrderSource(order?.orderSource.valueOf() ?? null);
+        }
         if (order?.orderItems) {
             setNewOrderProducts(order.orderItems);
         }

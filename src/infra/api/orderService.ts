@@ -8,12 +8,7 @@ const ORDERS_URL = `${API_BASE_URL}/Order`;
 export const fetchOrders = async (): Promise<OrderResponse[]> => {
     try {
         const response = await axios.get<OrderResponse[]>(ORDERS_URL);
-        return response.data.map((order) => ({
-            ...order,
-            deliveryDate: order.deliveryDate ? new Date(order.deliveryDate) : null,
-            deliveryWindowStartDate: order.deliveryWindowStartDate ? new Date(order.deliveryWindowStartDate) : null,
-            deliveryWindowEndDate: order.deliveryWindowEndDate ? new Date(order.deliveryWindowEndDate) : null,
-        }));
+        return response.data.map((order) => formatDates(order));
     } catch (error) {
         handleError(error);
         return [];
@@ -22,13 +17,8 @@ export const fetchOrders = async (): Promise<OrderResponse[]> => {
 
 export const fetchOrderById = async (id: number): Promise<Order | null> => {
     try {
-        const response = await axios.get<Order>(`${ORDERS_URL}/${id}`);
-        return {
-            ...response.data,
-            deliveryDate: response.data.deliveryDate ? new Date(response.data.deliveryDate) : null,
-            deliveryWindowStartDate: response.data.deliveryWindowStartDate ? new Date(response.data.deliveryWindowStartDate) : null,
-            deliveryWindowEndDate: response.data.deliveryWindowEndDate ? new Date(response.data.deliveryWindowEndDate) : null,
-        };
+        const response = await axios.get<OrderResponse>(`${ORDERS_URL}/${id}`);
+        return formatDates(response.data);
     } catch (error) {
         throw new Error(`Error fetching order with ID ${id}: ${error}`);
     }
@@ -44,9 +34,8 @@ export const createOrder = async (order: OrderResponse): Promise<OrderResponse> 
             orderItems: formattedOrderItems,
             orderStatus: order.orderStatus
         }
-        console.log(newOrder);
         const response = await axios.post<OrderResponse>(ORDERS_URL, newOrder);
-        return response.data;
+        return formatDates(response.data);
     } catch (error) {
         throw new Error(`Error creating order: ${axios.isAxiosError(error) ? error.response?.data?.message || error.message : error}`);
     }
@@ -72,7 +61,7 @@ export const updateOrder = async (order: OrderResponse): Promise<OrderResponse> 
             orderStatus: order.orderStatus
         }
         const response = await axios.put<OrderResponse>(`${ORDERS_URL}/${id}`, newOrder);
-        return response.data;
+        return formatDates(response.data);
     } catch (error) {
         throw new Error(`Error updating order with ID ${order.id}: ${axios.isAxiosError(error) ? error.response?.data?.message || error.message : error}`);
     }
@@ -94,3 +83,12 @@ const handleError = (error: unknown): never => {
     }
     throw new Error(`Unexpected error: ${error}`);
 };
+
+const formatDates = (order: OrderResponse) => {
+    return {
+        ...order,
+        deliveryDate: order.deliveryDate ? new Date(order.deliveryDate) : null,
+        deliveryWindowStartDate: order.deliveryWindowStartDate ? new Date(order.deliveryWindowStartDate) : null,
+        deliveryWindowEndDate: order.deliveryWindowEndDate ? new Date(order.deliveryWindowEndDate) : null,
+    };
+}
