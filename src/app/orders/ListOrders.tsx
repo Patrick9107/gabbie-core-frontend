@@ -177,7 +177,7 @@ function ListOrders() {
     return (
         <>
             <Typography sx={{ fontWeight: "bold" }} variant="h4" gutterBottom> Bestellübersicht </Typography>
-            <AddButton onClick={() => setIsOpen(true)} />
+            <AddButton onClick={() => setIsOpen(true)} sxCustom={{marginBottom: 2}}/>
             <OrderTable orders={orders} onEdit={handleEditButtonClicked} onDelete={handleDeleteButtonClicked} />
 
             <OrderDialog
