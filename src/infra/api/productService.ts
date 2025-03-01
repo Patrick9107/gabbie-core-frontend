@@ -26,8 +26,12 @@ export const fetchProductById = async (id: number): Promise<Product | null> => {
 
 export const createProduct = async (product: Product): Promise<Product> => {
   try {
-    const { id, ...newProduct } = product;
-    const response = await axios.post<Product>(PRODUCTS_URL, newProduct);
+    const { id: _id, container, ...newProduct } = product;
+    const formattedProduct = {
+      ...newProduct,
+      containerId: container?.id ?? null
+    }
+    const response = await axios.post<Product>(PRODUCTS_URL, formattedProduct);
     return response.data;
   } catch (error) {
     throw new Error(`Error creating product: ${axios.isAxiosError(error) ? error.response?.data?.message || error.message : error}`);
@@ -36,7 +40,12 @@ export const createProduct = async (product: Product): Promise<Product> => {
 
 export const updateProduct = async (product: Product): Promise<Product> => {
   try {
-    const response = await axios.put<Product>(`${PRODUCTS_URL}/${product.id}`, product);
+    const { id, container, ...newProduct } = product;
+    const formattedProduct = {
+      ...newProduct,
+      containerId: container?.id ?? null
+    }
+    const response = await axios.put<Product>(`${PRODUCTS_URL}/${id}`, formattedProduct);
     return response.data;
   } catch (error) {
     throw new Error(`Error updating product with ID ${product.id}: ${axios.isAxiosError(error) ? error.response?.data?.message || error.message : error}`);
