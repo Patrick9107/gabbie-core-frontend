@@ -20,13 +20,12 @@ export const fetchContainerById = async (id: number): Promise<Container | null> 
     return response.data;
   } catch (error) {
     throw new Error(`Error fetching container with ID ${id}: ${error}`);
-    return null;
   }
 };
 
 export const createContainer = async (container: Container): Promise<Container> => {
   try {
-    const { id, ...newContainer } = container;
+    const { id: _id, ...newContainer } = container;
     const response = await axios.post<Container>(CONTAINERS_URL, newContainer);
     return response.data;
   } catch (error) {

@@ -26,6 +26,7 @@ function ListProducts() {
     const [isOpen, setOpen] = useState(false);
     const [edit, setEdit] = useState(false);
     const [containers,  setContainers ] = useState<Container[]>([]);
+    // const [selectedContainer, setSelectedContainer] = useState<Container | null>(null);
     const [newProduct, setNewProduct] = useState<Product>(defaultProduct);
     const [deleteConfirm, setDeleteConfirm] = useState(false);
     const [productToDelete, setProductToDelete] = useState<number | null>(null);
@@ -45,7 +46,6 @@ function ListProducts() {
     const handleSubmit = async () => {
         try {
             let updatedProduct: Product;
-
             if (edit) {
                 updatedProduct = await updateProduct(newProduct);
                 setProducts((prevProducts) => prevProducts.map(p => p.id === updatedProduct.id ? updatedProduct : p));
