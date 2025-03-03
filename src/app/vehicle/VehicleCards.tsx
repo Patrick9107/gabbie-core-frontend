@@ -25,7 +25,7 @@ function VehicleCards({ vehicles, onDelete, onEdit }: Props) {
               boxShadow: 3,
               transition: "transform 0.3s ease, box-shadow 0.3s ease",
               "&:hover": {
-                transform: "scale(1.05)",
+                transform: "scale(1.002)",
                 boxShadow: 6,
               },
             }}

@@ -67,7 +67,7 @@ const OrderTable = ({ orders, onEdit, onDelete }: Props) => {
                             </TableCell>
                             <TableCell>{order.phoneNumber}</TableCell>
                             <TableCell>{order.address}</TableCell>
-                            <TableCell>{order.totalAmount}€</TableCell>
+                            <TableCell>{order.totalAmount.toFixed(2)}€</TableCell>
                             <TableCell>
                                 {order?.deliveryDate
                                   ? new Date(order.deliveryDate).getTime()

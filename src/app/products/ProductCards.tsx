@@ -25,7 +25,7 @@ function ProductCards({ products, onDelete, onEdit }: Props) {
               boxShadow: 3,
               transition: "transform 0.3s ease, box-shadow 0.3s ease", // Smooth transition
               "&:hover": {
-                transform: "scale(1.05)", // Slightly scale up on hover
+                transform: "scale(1.002)", // Slightly scale up on hover
                 boxShadow: 6, // Increase shadow on hover
               },
             }}
