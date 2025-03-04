@@ -11,16 +11,21 @@ const containerStyle = {
 const MapComponent = ({ routeData }: { routeData: any }) => {
     const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
     const [userLocation, setUserLocation] = useState<google.maps.LatLng | null>(null);
+    const [reloadMap, setReloadMap] = useState<boolean>(false);  
+
+    const fixedOrigin = "Heldenpl. 23, 2440 Reisenberg";  // das ist scuffed
 
     useEffect(() => {
         if (!routeData || !window.google) return;
 
         const directionsService = new google.maps.DirectionsService();
+        
+        const { destination, waypoints } = routeData;
         directionsService.route(
             {
-                origin: routeData.origin,
-                destination: routeData.destination,
-                waypoints: routeData.waypoints,
+                origin: fixedOrigin,  
+                destination,
+                waypoints: waypoints.map((wp: { location: string }) => ({ location: wp.location, stopover: true })),
                 travelMode: google.maps.TravelMode.DRIVING,
             },
             (result, status) => {
@@ -31,13 +36,13 @@ const MapComponent = ({ routeData }: { routeData: any }) => {
                 }
             }
         );
-    }, [routeData]);
+    }, [routeData, reloadMap]);  
 
     useEffect(() => {
         const watchId = navigator.geolocation.watchPosition(
             (position) => {
                 const location = window.google ? new google.maps.LatLng(position.coords.latitude, position.coords.longitude) : null;
-                console.log('User Location:', location); 
+                console.log('User Location:', location);
                 setUserLocation(location);
             },
             (error) => console.error("Error getting location:", error),
@@ -49,18 +54,21 @@ const MapComponent = ({ routeData }: { routeData: any }) => {
 
     const handleExportToGoogleMaps = () => {
         if (!routeData) return;
-        
-        const origin = encodeURIComponent(routeData.origin);
+
         const destination = encodeURIComponent(routeData.destination);
-        
+
         const waypoints = routeData.waypoints
             .map((wp: { location: string }) => encodeURIComponent(wp.location))
-            .slice(0, 9)  
+            .slice(0, 9)
             .join('/');
-        
-        const finalRoute = `https://www.google.com/maps/dir/${origin}/${waypoints}/${destination}`;
-        
+
+        const finalRoute = `https://www.google.com/maps/dir/${encodeURIComponent(fixedOrigin)}/${waypoints}/${destination}`;
+
         window.open(finalRoute, '_blank');
+    };
+
+    const handleReloadMap = () => {
+        setReloadMap(!reloadMap);  
     };
 
     return (
@@ -85,6 +93,15 @@ const MapComponent = ({ routeData }: { routeData: any }) => {
                 sx={{ position: 'absolute', top: '10px', right: '10px' }}
             >
                 Open in Google Maps
+            </Button>
+
+            <Button
+                variant="contained"
+                color="secondary"
+                onClick={handleReloadMap}
+                sx={{ position: 'absolute', top: '50px', right: '10px' }}
+            >
+                Reload Map
             </Button>
         </LoadScript>
     );
