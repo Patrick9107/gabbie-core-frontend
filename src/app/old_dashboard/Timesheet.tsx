@@ -31,10 +31,11 @@ export default function CountdownTimer() {
         return () => clearInterval(timer);
     }, []);
 
-    const percentage = (timeLeft / (7 * 24 * 60 * 60)) * 100;
+    const totalSeconds = 7 * 24 * 60 * 60; // Sekunden in einer Woche
+    const percentage = timeLeft / totalSeconds; // Anteil der verbleibenden Zeit
     const radius = 50;
     const circumference = 2 * Math.PI * radius;
-    const strokeDashoffset = circumference * (1 - percentage / 100);
+    const strokeDashoffset = circumference * (1 - percentage);
 
     const formatTime = (seconds) => {
         const days = Math.floor(seconds / (24 * 60 * 60));
@@ -49,6 +50,7 @@ export default function CountdownTimer() {
             <Typography variant="h6">Zeit bis zum nächsten Liefer-Wochenende</Typography>
             <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", mt: 2 }}>
                 <svg width="120" height="120" viewBox="0 0 120 120">
+                    {/* Hintergrund-Kreis */}
                     <circle
                         cx="60"
                         cy="60"
@@ -57,6 +59,7 @@ export default function CountdownTimer() {
                         stroke="#e0e0e0"
                         strokeWidth="10"
                     />
+                    {/* Fortschritt-Kreis (SPIEGELVERKEHRT) */}
                     <circle
                         cx="60"
                         cy="60"
@@ -67,6 +70,7 @@ export default function CountdownTimer() {
                         strokeDasharray={circumference}
                         strokeDashoffset={strokeDashoffset}
                         strokeLinecap="round"
+                        transform="scale(-1, 1) translate(-120, 0) rotate(-90 60 60)"
                     />
                 </svg>
                 <Typography variant="body2" sx={{ mt: 2 }}>
