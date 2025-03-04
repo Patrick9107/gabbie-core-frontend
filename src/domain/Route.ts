@@ -4,8 +4,8 @@ import {RouteStatus} from "./enums/RouteStatus.ts";
 export interface Route extends BaseEntity {
     totalDuration: number;
     totalDistance: number;
-    optimized: boolean;
-    startTime: Date;
-    endTime: Date;
+    startTime: string;
+    endTime: string;
     status: RouteStatus;
+    orderIds: number[];
 }

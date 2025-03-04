@@ -7,6 +7,7 @@ import Logout from './app/login/Logout';
 import VehicleList from "./app/vehicle/VehicleList";
 import ListProducts from "./app/products/ListProducts";
 import RoutesPage from "./app/routes/Routes.tsx";
+import DriverPage from "./app/driver/DriverPage.tsx";
 import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
 import { useAuth } from './app/login/AuthProvider';
@@ -39,6 +40,7 @@ function AppRoutes() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginForm />} />
+        <Route path="/driver" element={<DriverPage />} />
 
         <Route element={<AppShell />}>
           <Route path="/" element={<RequireAuth><Dashboard /></RequireAuth>} />
