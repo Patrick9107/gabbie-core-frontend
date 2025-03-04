@@ -3,6 +3,7 @@ import Timesheet from "./Timesheet.tsx";
 import OrderStats from "./OrderStats.tsx";
 import OrderList from "./OrderList.tsx";
 import DailyRecords from "./DailyRecords.tsx";
+import DailyOrders from "./DailyOrders.tsx";
 
 function Dashboard() {
     return (
@@ -15,19 +16,12 @@ function Dashboard() {
                     <OrderStats />
                 </Grid>
                 <Grid item xs={12} md={6} lg={4}>
-                    <Paper sx={{ p: 2 }}>
-                        <Typography variant="h6">Heutige Bestellungen</Typography>
-                        <ul>
-                            {Array.from({ length: 6 }).map((_, i) => (
-                                <li key={i}>Neue Bestellung um {10 + i}:00 AM</li>
-                            ))}
-                        </ul>
-                    </Paper>
+                    <DailyOrders />
                 </Grid>
                 <Grid item xs={12}>
                     <OrderList />
                 </Grid>
-                <Grid item xs={12}>
+                <Grid item xs={12} md={6} lg={4}>
                     <DailyRecords />
                 </Grid>
             </Grid>

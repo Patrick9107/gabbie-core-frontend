@@ -1,32 +1,82 @@
-import { Paper, Typography, CircularProgress, Box, Button } from "@mui/material";
+import { useEffect, useState } from "react";
+import { Paper, Typography, Box } from "@mui/material";
 
-function Timesheet() {
+const getNextSaturday = () => {
+    const now = new Date();
+    const saturday = new Date();
+    saturday.setDate(now.getDate() + ((6 - now.getDay() + 7) % 7));
+    saturday.setHours(8, 0, 0, 0);
+    return saturday;
+};
+
+const getTimeUntilNextSaturday = () => {
+    const now = new Date();
+    const nextSaturday = getNextSaturday();
+    return Math.floor((nextSaturday - now) / 1000);
+};
+
+export default function CountdownTimer() {
+    const [timeLeft, setTimeLeft] = useState(getTimeUntilNextSaturday());
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setTimeLeft((prev) => {
+                if (prev <= 1) {
+                    return getTimeUntilNextSaturday();
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, []);
+
+    const totalSeconds = 7 * 24 * 60 * 60; // Sekunden in einer Woche
+    const percentage = timeLeft / totalSeconds; // Anteil der verbleibenden Zeit
+    const radius = 50;
+    const circumference = 2 * Math.PI * radius;
+    const strokeDashoffset = circumference * (1 - percentage);
+
+    const formatTime = (seconds) => {
+        const days = Math.floor(seconds / (24 * 60 * 60));
+        const hours = Math.floor((seconds % (24 * 60 * 60)) / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60;
+        return `${days}d ${hours}h ${minutes}m ${secs}s`;
+    };
+
     return (
         <Paper sx={{ p: 2, textAlign: "center" }}>
-            <Typography variant="h6">Timesheet</Typography>
-            <Typography variant="subtitle1">11 Mar 2024</Typography>
-            <Box sx={{ position: "relative", display: "inline-flex", mt: 2 }}>
-                <CircularProgress variant="determinate" value={70} size={80} />
-                <Box
-                    sx={{
-                        top: 0,
-                        left: 0,
-                        bottom: 0,
-                        right: 0,
-                        position: "absolute",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                    }}
-                >
-                    <Typography variant="h6">3.45 hrs</Typography>
-                </Box>
+            <Typography variant="h6">Zeit bis zum nächsten Liefer-Wochenende</Typography>
+            <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", mt: 2 }}>
+                <svg width="120" height="120" viewBox="0 0 120 120">
+                    {/* Hintergrund-Kreis */}
+                    <circle
+                        cx="60"
+                        cy="60"
+                        r={radius}
+                        fill="none"
+                        stroke="#e0e0e0"
+                        strokeWidth="10"
+                    />
+                    {/* Fortschritt-Kreis (SPIEGELVERKEHRT) */}
+                    <circle
+                        cx="60"
+                        cy="60"
+                        r={radius}
+                        fill="none"
+                        stroke="#3b82f6"
+                        strokeWidth="10"
+                        strokeDasharray={circumference}
+                        strokeDashoffset={strokeDashoffset}
+                        strokeLinecap="round"
+                        transform="scale(-1, 1) translate(-120, 0) rotate(-90 60 60)"
+                    />
+                </svg>
+                <Typography variant="body2" sx={{ mt: 2 }}>
+                    {formatTime(timeLeft)}
+                </Typography>
             </Box>
-            <Button variant="contained" sx={{ mt: 2 }}>
-                Punch Out
-            </Button>
         </Paper>
     );
 }
-
-export default Timesheet;
