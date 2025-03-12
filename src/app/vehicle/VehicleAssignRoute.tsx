@@ -48,7 +48,7 @@ const AssignRouteButton: React.FC<AssignRouteButtonProps> = ({ vehicleId, licens
     return (
         <>
             <Button variant="contained" color="primary" onClick={handleOpen}>
-                Assign Route
+                Route
             </Button>
 
             <Dialog open={open} onClose={handleClose}>

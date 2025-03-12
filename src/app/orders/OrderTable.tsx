@@ -1,4 +1,6 @@
-import { Table, TableBody, TableCell, TableHead, TableRow, IconButton, Collapse, Box, Button, Checkbox } from "@mui/material";
+import {
+    Table, TableBody, TableCell, TableHead, TableRow, IconButton, Collapse, Box, Button, Paper, Typography, Checkbox
+} from "@mui/material";
 import { KeyboardArrowDown, KeyboardArrowUp } from "@mui/icons-material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
@@ -6,7 +8,7 @@ import { useState, Fragment } from "react";
 import { OrderStatus } from "../../domain/enums/OrderStatus.ts";
 import { OrderSource } from "../../domain/enums/OrderSource.ts";
 import { OrderResponse } from "../../domain/OrderResponse.ts";
-import { useNavigate } from "react-router-dom"; // Für Navigation
+import { useNavigate } from "react-router-dom";
 
 interface Props {
     orders: OrderResponse[];
@@ -23,10 +25,11 @@ const OrderTable = ({ orders, onEdit, onDelete }: Props) => {
     const [openRows, setOpenRows] = useState(new Map<number, boolean>());
     const [selecting, setSelecting] = useState(false);
     const [selectedOrders, setSelectedOrders] = useState<number[]>([]);
-    const navigate = useNavigate(); // React-Router für Navigation
+    const navigate = useNavigate();
 
     const toggleRow = (id: number) => {
-        setOpenRows((prev) => {
+        if (selecting) return; // Verhindert das Aufklappen während der Auswahl
+        setOpenRows(prev => {
             const newMap = new Map(prev);
             newMap.set(id, !newMap.get(id));
             return newMap;
@@ -34,27 +37,30 @@ const OrderTable = ({ orders, onEdit, onDelete }: Props) => {
     };
 
     const toggleOrderSelection = (id: number) => {
-        setSelectedOrders((prev) =>
+        setSelectedOrders(prev =>
             prev.includes(id) ? prev.filter(orderId => orderId !== id) : [...prev, id]
         );
     };
 
     const handleRouteCalculation = () => {
         const selectedOrdersData = orders.filter(order => selectedOrders.includes(order.id));
-
         navigate(`/routes`, { state: { orders: selectedOrdersData } });
     };
 
     return (
-        <Box>
+        <Paper sx={{ overflow: "hidden", borderRadius: "12px", boxShadow: 3, p: 2 }}>
             <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-                <Button variant="contained" onClick={() => setSelecting(!selecting)}>
+                <Button
+                    variant="contained"
+                    sx={{ backgroundColor: "#3d9970", "&:hover": { backgroundColor: "#33805d" } }}
+                    onClick={() => setSelecting(!selecting)}
+                >
                     {selecting ? "Auswahl beenden" : "Bestellungen auswählen"}
                 </Button>
                 {selecting && (
                     <Button
                         variant="contained"
-                        color="success"
+                        sx={{ backgroundColor: "#3d9970", "&:hover": { backgroundColor: "#33805d" } }}
                         onClick={handleRouteCalculation}
                         disabled={selectedOrders.length === 0}
                     >
@@ -63,11 +69,10 @@ const OrderTable = ({ orders, onEdit, onDelete }: Props) => {
                 )}
             </Box>
 
-            <Table>
+            <Table sx={{ minWidth: 650 }}>
                 <TableHead>
-                    <TableRow>
+                    <TableRow sx={{ backgroundColor: "#3d9970", "& th": { color: "white", fontWeight: "bold" } }}>
                         <TableCell />
-                        {selecting && <TableCell>Auswahl</TableCell>}
                         <TableCell>Telefonnummer</TableCell>
                         <TableCell>Adresse</TableCell>
                         <TableCell>Preis</TableCell>
@@ -77,73 +82,87 @@ const OrderTable = ({ orders, onEdit, onDelete }: Props) => {
                 <TableBody>
                     {orders.map(order => (
                         <Fragment key={order.id}>
-                            <TableRow onClick={() => toggleRow(order.id)}>
+                            <TableRow
+                                sx={{ backgroundColor: selectedOrders.includes(order.id) ? "#d5f5e3" : "inherit", cursor: "pointer" }}
+                            >
                                 <TableCell>
-                                    <IconButton>
-                                        {openRows.get(order.id) ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
-                                    </IconButton>
-                                </TableCell>
-                                {selecting && (
-                                    <TableCell>
+                                    {selecting ? (
                                         <Checkbox
                                             checked={selectedOrders.includes(order.id)}
                                             onChange={() => toggleOrderSelection(order.id)}
                                         />
-                                    </TableCell>
-                                )}
+                                    ) : (
+                                        <IconButton size="small" onClick={() => toggleRow(order.id)}>
+                                            {openRows.get(order.id) ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
+                                        </IconButton>
+                                    )}
+                                </TableCell>
                                 <TableCell>{order.phoneNumber}</TableCell>
                                 <TableCell>{order.address}</TableCell>
                                 <TableCell>{order.totalAmount}€</TableCell>
-                                <TableCell>{order?.deliveryDate ? new Date(order.deliveryDate).toLocaleDateString() : "Kein Lieferdatum angegeben"}</TableCell>
-                            </TableRow>
-                            <TableRow>
-                                <TableCell colSpan={6} sx={{ paddingBottom: 0, paddingTop: 0, backgroundColor: "#f0f0f0" }}>
-                                    <Collapse in={openRows.get(order.id)} timeout="auto" unmountOnExit>
-                                        <Box sx={{ margin: 2 }}>
-                                            <h3>Weitere Details</h3>
-                                            <ul>
-                                                <li>Status: {OrderStatus[order.orderStatus]}</li>
-                                                <li>Quelle: {OrderSource[order.orderSource]}</li>
-                                                <li>Notiz: {order.note}</li>
-                                            </ul>
-                                            <Table>
-                                                <TableHead>
-                                                    <TableRow>
-                                                        <TableCell>Produkt</TableCell>
-                                                        <TableCell>Menge</TableCell>
-                                                        <TableCell>Preis</TableCell>
-                                                    </TableRow>
-                                                </TableHead>
-                                                <TableBody>
-                                                    {order.orderItems?.map((item, index) => (
-                                                        <TableRow key={index}>
-                                                            <TableCell>{item.product.name}</TableCell>
-                                                            <TableCell>{item.quantity}</TableCell>
-                                                            <TableCell>{item.product.price}€</TableCell>
-                                                        </TableRow>
-                                                    ))}
-                                                    <TableRow>
-                                                        <TableCell sx={sumSx}>Summe</TableCell>
-                                                        <TableCell sx={sumSx}>
-                                                            {order.orderItems?.reduce((prev, curr) => prev + curr.quantity, 0)}
-                                                        </TableCell>
-                                                        <TableCell sx={sumSx}>{order.totalAmount}€</TableCell>
-                                                    </TableRow>
-                                                </TableBody>
-                                            </Table>
-                                            <Box sx={{ display: "flex", marginTop: "8px", gap: "4px" }}>
-                                                <Button variant="contained" startIcon={<EditIcon />} onClick={() => onEdit(order.id)}>Bearbeiten</Button>
-                                                <Button variant="contained" color="error" startIcon={<DeleteIcon />} onClick={() => onDelete(order.id)}>Löschen</Button>
-                                            </Box>
-                                        </Box>
-                                    </Collapse>
+                                <TableCell>
+                                    {order?.deliveryDate
+                                        ? new Date(order.deliveryDate).toLocaleDateString()
+                                        : "Kein Lieferdatum angegeben"}
                                 </TableCell>
                             </TableRow>
+
+                            {!selecting && (
+                                <TableRow>
+                                    <TableCell colSpan={6} sx={{ padding: 0, backgroundColor: "#f4f6f8" }}>
+                                        <Collapse in={openRows.get(order.id)} timeout="auto" unmountOnExit>
+                                            <Box sx={{ margin: 2 }}>
+                                                <Typography variant="h5" sx={{ fontWeight: "bold", marginBottom: 2 }}>
+                                                    Weitere Details
+                                                </Typography>
+                                                <ul>
+                                                    <li>Status: {OrderStatus[order.orderStatus]}</li>
+                                                    <li>Quelle: {OrderSource[order.orderSource]}</li>
+                                                    <li>Notiz: {order.note}</li>
+                                                </ul>
+                                                <Table size="small">
+                                                    <TableHead>
+                                                        <TableRow>
+                                                            <TableCell>Produkt</TableCell>
+                                                            <TableCell>Menge</TableCell>
+                                                            <TableCell>Preis</TableCell>
+                                                        </TableRow>
+                                                    </TableHead>
+                                                    <TableBody>
+                                                        {order.orderItems?.map((item, index) => (
+                                                            <TableRow key={index}>
+                                                                <TableCell>{item.product.name}</TableCell>
+                                                                <TableCell>{item.quantity}</TableCell>
+                                                                <TableCell>{item.product.price.toFixed(2)}€</TableCell>
+                                                            </TableRow>
+                                                        ))}
+                                                        <TableRow>
+                                                            <TableCell sx={sumSx}>Summe</TableCell>
+                                                            <TableCell sx={sumSx}>
+                                                                {order.orderItems?.reduce((prev, curr) => prev + curr.quantity, 0)}
+                                                            </TableCell>
+                                                            <TableCell sx={sumSx}>{order.totalAmount.toFixed(2)}€</TableCell>
+                                                        </TableRow>
+                                                    </TableBody>
+                                                </Table>
+                                                <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, marginTop: 2 }}>
+                                                    <Button variant="outlined" startIcon={<EditIcon />} onClick={() => onEdit(order.id)}>
+                                                        Bearbeiten
+                                                    </Button>
+                                                    <Button variant="contained" color="error" startIcon={<DeleteIcon />} onClick={() => onDelete(order.id)}>
+                                                        Löschen
+                                                    </Button>
+                                                </Box>
+                                            </Box>
+                                        </Collapse>
+                                    </TableCell>
+                                </TableRow>
+                            )}
                         </Fragment>
                     ))}
                 </TableBody>
             </Table>
-        </Box>
+        </Paper>
     );
 };
 

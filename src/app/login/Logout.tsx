@@ -12,6 +12,7 @@ const Logout: React.FC = () => {
       setIsTokenValid(false);
       localStorage.removeItem('authToken');
       localStorage.removeItem('role');
+      localStorage.removeItem('name');
     };
 
     logoutUser();

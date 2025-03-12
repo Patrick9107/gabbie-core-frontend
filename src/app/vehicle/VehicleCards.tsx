@@ -2,6 +2,7 @@ import { Button, Card, CardContent, CardHeader, CardMedia, Box } from "@mui/mate
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { Vehicle } from "../../domain/Vehicle.ts";
+import AssignRouteDialog from "../vehicle/VehicleAssignRoute.tsx";
 
 interface Props {
   vehicles: Vehicle[];
@@ -17,7 +18,7 @@ function VehicleCards({ vehicles, onDelete, onEdit }: Props) {
           <Card
             key={vehicle.id}
             sx={{
-              width: 290,
+              width: 500,
               height: 250,
               display: "flex",
               flexDirection: "column",
@@ -66,6 +67,12 @@ function VehicleCards({ vehicles, onDelete, onEdit }: Props) {
               >
                 Löschen
               </Button>
+              <AssignRouteDialog
+                vehicleId={vehicle.id}
+                licensePlate={vehicle.licensePlate}
+                capacity={vehicle.capacity}
+                status={vehicle.status}
+              />
             </CardContent>
           </Card>
         ))}
