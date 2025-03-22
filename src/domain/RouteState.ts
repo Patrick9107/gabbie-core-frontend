@@ -5,4 +5,5 @@ export interface RouteState {
     destination: string;
     waypoints: { location: string; stopover: boolean }[];
     rawStops: Stop[];
+    orderIds: number[];
 }
