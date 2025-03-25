@@ -18,15 +18,14 @@ function ProductCards({ products, onDelete, onEdit }: Props) {
             key={product.id}
             sx={{
               width: 290,
-              height: 340,
               display: "flex",
               flexDirection: "column",
               borderRadius: 3,
               boxShadow: 3,
-              transition: "transform 0.3s ease, box-shadow 0.3s ease", // Smooth transition
+              transition: "transform 0.3s ease, box-shadow 0.3s ease",
               "&:hover": {
-                transform: "scale(1.002)", // Slightly scale up on hover
-                boxShadow: 6, // Increase shadow on hover
+                transform: "scale(1.002)",
+                boxShadow: 6,
               },
             }}
           >
@@ -39,6 +38,11 @@ function ProductCards({ products, onDelete, onEdit }: Props) {
               image={product.imageUrl || "placeholder.svg"}
               sx={{ height: 180, objectFit: "contain", padding: theme => theme.spacing(2) }} // Using theme spacing
             />
+            <Box sx={{ textAlign: "center", mt: 1 }}>
+              <div><strong>Preis:</strong> {product.price} €</div>
+              <div><strong>Gewicht:</strong> {product.weight} kg</div>
+              <div><strong>Behälter:</strong> {product.container?.type.toString() || 'Keiner'}</div>
+            </Box>
             <CardContent sx={{ display: "flex", gap: theme => theme.spacing(1.25), mt: "auto", justifyContent: "center" }}>
               <Button onClick={() => onEdit(product.id)} variant="contained" startIcon={<EditIcon />} sx={{ fontSize: "0.8rem" }}>
                 Bearbeiten

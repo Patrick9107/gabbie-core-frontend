@@ -1,13 +1,17 @@
-import {Product} from "../../domain/Product.ts";
+import { Product } from "../../domain/Product.ts";
 import {
     Box,
     Button,
-    Dialog, DialogActions,
+    Dialog,
+    DialogActions,
     DialogContent,
-    DialogTitle, MenuItem, Select, TextField
+    DialogTitle,
+    MenuItem,
+    Select,
+    TextField,
 } from "@mui/material";
-import {ChangeEvent} from "react";
-import {Container} from "../../domain/Container.ts";
+import { ChangeEvent, useState } from "react";
+import { Container } from "../../domain/Container.ts";
 
 interface Props {
     open: boolean;
@@ -20,73 +24,116 @@ interface Props {
     onContainerChange: (containerId: number | null) => void;
 }
 
-function ProductDialog({open, edit, product, onClose, onSubmit, onChange, onContainerChange, containers}: Props) {
+function ProductDialog({ open, edit, product, onClose, onSubmit, onChange, onContainerChange, containers }: Props) {
+    const [errors, setErrors] = useState({
+        name: "",
+        price: "",
+        weight: "",
+    });
+
+    // Überprüft, ob alle erforderlichen Felder ausgefüllt sind
+    const validateForm = () => {
+        const newErrors: any = {};
+        if (!product.name) newErrors.name = "Name ist erforderlich";
+        if (!product.price) newErrors.price = "Preis ist erforderlich";
+        if (!product.weight) newErrors.weight = "Gewicht ist erforderlich";
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    // Form submit Handler
+    const handleSubmit = () => {
+        if (validateForm()) {
+            onSubmit();
+        }
+    };
 
     return (
-        <Dialog open={open} onClose={onClose}>
-            <DialogTitle>{edit ? "Produkt bearbeiten" : "Neues Produkt"}</DialogTitle>
-            <DialogContent>
-                <TextField
-                    label="Name"
-                    name="name"
+      <Dialog open={open} onClose={onClose}>
+          <DialogTitle>{edit ? "Produkt bearbeiten" : "Neues Produkt"}</DialogTitle>
+          <DialogContent>
+              <TextField
+                label="Name"
+                name="name"
+                fullWidth
+                margin="dense"
+                onChange={onChange}
+                value={product.name}
+                error={!!errors.name}
+                helperText={errors.name}
+              />
+              <Box sx={{ display: "flex", gap: "8px", marginY: "4px" }}>
+                  <TextField
+                    label="Preis"
+                    name="price"
+                    type="number"
+                    value={product.price}
                     fullWidth
                     margin="dense"
                     onChange={onChange}
-                    value={product.name}
-                />
-                <Box sx={{ display: "flex", gap: "8px", marginY: "4px" }}>
-                    <TextField
-                        label="Preis"
-                        name="price"
-                        type="number"
-                        value={product.price}
-                        fullWidth
-                        margin="dense"
-                        onChange={onChange}
-                    />
-                    <TextField
-                        label="Gewicht"
-                        name="weight"
-                        type="number"
-                        value={product.weight}
-                        fullWidth
-                        margin="dense"
-                        onChange={onChange}
-                    />
-                </Box>
-                <TextField
-                    label="Beschreibung (optional)"
-                    name="description"
-                    value={product.description}
-                    multiline rows={3}
+                    error={!!errors.price}
+                    helperText={errors.price}
+                  />
+                  <TextField
+                    label="Gewicht"
+                    name="weight"
+                    type="number"
+                    value={product.weight}
                     fullWidth
                     margin="dense"
                     onChange={onChange}
-                />
-                <Box sx={{ display: "flex", gap: "8px", marginY: "4px" }}>
-                {/*todo, maybe file upload?? idk*/}
-                <TextField
+                    error={!!errors.weight}
+                    helperText={errors.weight}
+                  />
+              </Box>
+              <TextField
+                label="Beschreibung (optional)"
+                name="description"
+                value={product.description}
+                multiline
+                rows={3}
+                fullWidth
+                margin="dense"
+                onChange={onChange}
+              />
+              <Box sx={{ display: "flex", gap: "8px", marginY: "4px" }}>
+                  <TextField
                     label="Bild URL"
                     name="imageUrl"
                     value={product.imageUrl}
                     fullWidth
                     margin="dense"
                     onChange={onChange}
-                />
-                    <Select value={product.container === undefined ? "" : product.container?.id ?? "none"} displayEmpty fullWidth onChange={(e) => onContainerChange(e.target.value === "none" ? null : Number(e.target.value))}>
-                        <MenuItem value="" disabled>Behälter auswählen</MenuItem>
-                        <MenuItem value="none"> Keiner </MenuItem>
-                        {containers.map(container => (
-                            <MenuItem key={container.id} value={container.id}> {container.type} </MenuItem>
-                        ))}
-                    </Select>
-                </Box>
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={onClose} color="error">Abbrechen</Button>
-                <Button onClick={onSubmit} color="success">Speichern</Button>
-            </DialogActions>
-        </Dialog>
+                  />
+                  <Select
+                    value={product.container === undefined ? "" : product.container?.id ?? "none"}
+                    displayEmpty
+                    fullWidth
+                    onChange={(e) =>
+                      onContainerChange(e.target.value === "none" ? null : Number(e.target.value))
+                    }
+                  >
+                      <MenuItem value="" disabled>
+                          Behälter auswählen
+                      </MenuItem>
+                      <MenuItem value="none">Keiner</MenuItem>
+                      {containers.map((container) => (
+                        <MenuItem key={container.id} value={container.id}>
+                            {container.type}
+                        </MenuItem>
+                      ))}
+                  </Select>
+              </Box>
+          </DialogContent>
+          <DialogActions>
+              <Button onClick={onClose} color="error">
+                  Abbrechen
+              </Button>
+              <Button onClick={handleSubmit} color="success">
+                  Speichern
+              </Button>
+          </DialogActions>
+      </Dialog>
     );
 }
 

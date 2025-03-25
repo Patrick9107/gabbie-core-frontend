@@ -77,6 +77,7 @@ const OrderTable = ({ orders, onEdit, onDelete }: Props) => {
                         <TableCell>Adresse</TableCell>
                         <TableCell>Preis</TableCell>
                         <TableCell>Aktueller Liefertermin</TableCell>
+                        <TableCell>Aktionen</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
@@ -104,6 +105,14 @@ const OrderTable = ({ orders, onEdit, onDelete }: Props) => {
                                     {order?.deliveryDate
                                         ? new Date(order.deliveryDate).toLocaleDateString()
                                         : "Kein Lieferdatum angegeben"}
+                                </TableCell>
+                                <TableCell>
+                                    <IconButton onClick={() => onEdit(order.id)}>
+                                        <EditIcon />
+                                    </IconButton>
+                                    <IconButton color="error" onClick={() => onDelete(order.id)}>
+                                        <DeleteIcon />
+                                    </IconButton>
                                 </TableCell>
                             </TableRow>
 
@@ -145,14 +154,6 @@ const OrderTable = ({ orders, onEdit, onDelete }: Props) => {
                                                         </TableRow>
                                                     </TableBody>
                                                 </Table>
-                                                <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, marginTop: 2 }}>
-                                                    <Button variant="outlined" startIcon={<EditIcon />} onClick={() => onEdit(order.id)}>
-                                                        Bearbeiten
-                                                    </Button>
-                                                    <Button variant="contained" color="error" startIcon={<DeleteIcon />} onClick={() => onDelete(order.id)}>
-                                                        Löschen
-                                                    </Button>
-                                                </Box>
                                             </Box>
                                         </Collapse>
                                     </TableCell>
