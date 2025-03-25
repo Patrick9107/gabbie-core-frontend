@@ -3,40 +3,56 @@ import axios from "axios";
 import { API_BASE_URL } from "../../../apiConfig";
 import Map from "../routes/Map";
 import AddressList from "../routes/AddressList";
-import { deserializeRouteData } from "./DriverUtils"; 
+import { deserializeRouteData } from "./DriverUtils";
 
 const DriverPage = () => {
-    const [vehicles, setVehicles] = useState<any[]>([]);
+    const [vehicle, setVehicle] = useState<any | null>(null);
     const [routeData, setRouteData] = useState<any | null>(null);
-    const [isLoading, setIsLoading] = useState<boolean>(false); 
+    const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
-    
+
     useEffect(() => {
-        const fetchVehicles = async () => {
+        const fetchVehicle = async () => {
+            let storedVehicleName = localStorage.getItem("name"); // e.g., "Fahrzeug-A"
+
+            if (!storedVehicleName) {
+                setError("No vehicle assigned to the logged-in user.");
+                return;
+            }
+
+            // Extract license plate by removing "Fahrzeug-"
+            if (storedVehicleName.startsWith("Fahrzeug-")) {
+                storedVehicleName = storedVehicleName.substring(9);
+            }
+
             try {
                 const response = await axios.get(`${API_BASE_URL}/vehicle`);
                 if (response.status === 200) {
-                    setVehicles(response.data);
+                    const foundVehicle = response.data.find((v: any) => v.licensePlate === storedVehicleName);
+
+                    if (foundVehicle) {
+                        setVehicle(foundVehicle);
+                    } else {
+                        setError("Vehicle not found.");
+                    }
                 } else {
                     setError("Failed to fetch vehicles.");
                 }
             } catch (error) {
-                setError("Error fetching vehicles.");
+                setError("Error fetching vehicle data.");
             }
         };
 
-        fetchVehicles();
+        fetchVehicle();
     }, []);
-    
+
     useEffect(() => {
         const fetchRouteData = async (routeId: string) => {
             setIsLoading(true);
-            setError(null); 
+            setError(null);
 
             try {
                 const routeResponse = await axios.get(`${API_BASE_URL}/route/${routeId}`);
-                console.log("Route Response:", routeResponse);  
-
                 if (routeResponse.status === 200) {
                     const deserializedRouteData = deserializeRouteData(routeResponse.data.routeData);
                     setRouteData(deserializedRouteData);
@@ -50,13 +66,10 @@ const DriverPage = () => {
             }
         };
 
-        if (vehicles.length > 0) {
-            const routeId = vehicles[0]?.routeId;
-            if (routeId) {
-                fetchRouteData(routeId);
-            }
+        if (vehicle?.routeId) {
+            fetchRouteData(vehicle.routeId);
         }
-    }, [vehicles]);
+    }, [vehicle]);
 
     return (
         <div>
@@ -66,26 +79,22 @@ const DriverPage = () => {
             {isLoading && <p>Loading...</p>}
             {error && <p style={{ color: "red" }}>{error}</p>}
 
-            {/* Vehicle list */}
-            <ul>
-                {vehicles.map((vehicle) => (
-                    <li key={+vehicle.id}>Fahrzeug mit der Lizenznummer {vehicle.licensePlate}</li>
-                ))}
-            </ul>
+            {/* Show only the logged-in vehicle */}
+            {vehicle && <p>Fahrzeug mit der Lizenznummer {vehicle.licensePlate}</p>}
 
             {/* Map and Address List */}
             {routeData && routeData.rawStops && (
                 <>
                     <Map routeData={routeData} />
                     <AddressList
-                        stops={routeData.rawStops} // Use the rawStops from routeData
+                        stops={routeData.rawStops}
                         handleStatusChange={(index: number, status: string) => {
                             const updatedStops = [...routeData.rawStops];
                             updatedStops[index].status = status;
-                            setRouteData({ ...routeData, rawStops: updatedStops }); // Update stop status
+                            setRouteData({ ...routeData, rawStops: updatedStops });
                         }}
                         handleOpenDialog={(stop) => {
-                            console.log("ipoenDialog stop:", stop);
+                            console.log("openDialog stop:", stop);
                         }}
                         handleExportToGoogleMaps={(address: string) => {
                             const encodedAddress = encodeURIComponent(address);

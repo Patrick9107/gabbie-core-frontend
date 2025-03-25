@@ -12,6 +12,8 @@ const fetchRouteData = async (requestBody: any) => {
             body: JSON.stringify(requestBody),
         });
 
+        console.log(response)
+        
         if (!response.ok) {
             throw new Error(`Failed to fetch route with status: ${response.status}`);
         }
@@ -54,6 +56,8 @@ export const handleGetRoute = async (orders: Order[]) => {
         const requestBody = {
             locations: orders.map((order) => ({ address: order.address, serviceTime: 8 })),
         };
+
+        console.log("Request Body to RouteXL API:", JSON.stringify(requestBody, null, 2));
         
         const routeData = await fetchRouteData(requestBody);
 

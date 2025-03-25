@@ -64,8 +64,8 @@ const RoutesPage: React.FC = () => {
 
     const fetchRouteData = async (orders: Order[]) => {
         try {
-            const result = await handleGetRoute(orders); // Hier wird die importierte Funktion verwendet
-            setRouteData(result);  // Deine Logik, um die erhaltenen Routen-Daten zu setzen
+            const result = await handleGetRoute(orders);
+            setRouteData(result);
         } catch (error) {
             console.error("Fehler beim Abrufen der Route:", error);
         }
@@ -83,6 +83,7 @@ const RoutesPage: React.FC = () => {
                 </Box>
                 <Box sx={{ width: 300, p: 2, border: "1px solid #ddd", borderRadius: "8px" }}>
                     <AddressInput initialOrders={initialOrders} onSubmit={fetchRouteData} />
+                    <SaveRoute routeData={routeData} />
                 </Box>
             </Box>
             <AddressList
@@ -92,7 +93,6 @@ const RoutesPage: React.FC = () => {
                 handleExportToGoogleMaps={handleExportToGoogleMaps}
             />
             <RouteDialog open={openDialog} stop={selectedStop} onClose={handleCloseDialog} onSave={handleDialogSave} />
-            <SaveRoute routeData={routeData} />
         </Box>
     );
 };
