@@ -71,26 +71,14 @@ function ListOrders() {
     const [orderToDelete, setOrderToDelete] = useState<number | null>(null);
     const [selectedOrderSource, setSelectedOrderSource] = useState<number | null>(null);
     const [availableProducts, setAvailableProducts] = useState<Product[]>([]);
+    const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
 
-    const handleAddOrderItem = () => {
-        setNewOrderProducts([...newOrderProducts, { product: null, quantity: 1 }]);
+    const handleOpenProductDialog = () => {
+        setIsProductDialogOpen(true);
     };
 
-    const handleProductChange = (index: number, productId: number) => {
-        const selectedProduct = availableProducts.find(p => p.id === productId) || null;
-        const updatedProducts = [...newOrderProducts];
-        updatedProducts[index].product = selectedProduct;
-        setNewOrderProducts(updatedProducts);
-    };
-
-    const handleQuantityChange = (index: number, quantity: number) => {
-        const updatedProducts = [...newOrderProducts];
-        updatedProducts[index].quantity = quantity;
-        setNewOrderProducts(updatedProducts);
-    };
-
-    const handleDeleteProduct = (id: number) => {
-        setNewOrderProducts(newOrderProducts.filter((_, index) => index !== id));
+    const handleSetOrderItems = (items: { product: Product | null; quantity: number }[]) => {
+        setNewOrderProducts(items);
     }
 
     const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -183,19 +171,18 @@ function ListOrders() {
             <OrderDialog
                 open={isOpen}
                 edit={edit}
+                isProductDialogOpen={isProductDialogOpen}
+                onProductDialogClose={() => setIsProductDialogOpen(false)}
                 order={newOrder}
                 products={availableProducts}
-                orderItems={newOrderProducts}
                 onClose={handleCancel}
                 onSubmit={handleSubmit}
                 onChange={handleChange}
                 onDateChange={handleDateChange}
                 onOrderSourceChange={handleOrderSourceChange}
                 selectedOrderSource={selectedOrderSource}
-                onAddProduct={handleAddOrderItem}
-                onDeleteProduct={handleDeleteProduct}
-                onProductChange={handleProductChange}
-                onQuantityChange={handleQuantityChange}
+                onAddProduct={handleOpenProductDialog}
+                setOrderItems={handleSetOrderItems}
             />
 
             <DeleteConfirmationDialog open={deleteConfirm} onClose={() => setDeleteConfirm(false)} onConfirm={handleDelete} />

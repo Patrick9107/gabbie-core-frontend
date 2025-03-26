@@ -1,20 +1,20 @@
 import { Order } from "../../domain/Order.ts";
 import { Product } from "../../domain/Product.ts";
-import { Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button, Box, Select, MenuItem, Table, TableBody, TableCell, TableHead, TableRow, IconButton } from "@mui/material";
+import { Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button, Box, Select, MenuItem } from "@mui/material";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { ChangeEvent } from "react";
-import AddIcon from "@mui/icons-material/Add";
-import DeleteIcon from "@mui/icons-material/Delete";
 import dayjs, { Dayjs } from "dayjs";
 import {OrderSource} from "../../domain/enums/OrderSource.ts";
+import OrderItemsDialog from "./OrderItemsDialog.tsx";
 
 interface Props {
     open: boolean;
     edit: boolean;
+    isProductDialogOpen: boolean;
+    onProductDialogClose: () => void;
     order: Order;
     products: Product[];
-    orderItems: { product: Product | null; quantity: number }[];
     onClose: () => void;
     onSubmit: () => void;
     onChange: (e: ChangeEvent<HTMLInputElement>) => void;
@@ -22,12 +22,11 @@ interface Props {
     onAddProduct: () => void;
     onOrderSourceChange: (id: number) => void;
     selectedOrderSource: number | null;
-    onDeleteProduct: (index: number) => void;
-    onProductChange: (index: number, productId: number) => void;
-    onQuantityChange: (index: number, quantity: number) => void;
+    setOrderItems: (items: { product: Product | null; quantity: number }[]) => void;
 }
 
-const OrderDialog = ({ open, edit, order, products, orderItems, onClose, onSubmit, onChange, onDateChange, onAddProduct, onOrderSourceChange, selectedOrderSource, onDeleteProduct, onProductChange, onQuantityChange }: Props) => {
+const OrderDialog = ({ open, edit, isProductDialogOpen, onProductDialogClose, order, products, onClose, onSubmit, onChange, onDateChange, onAddProduct, onOrderSourceChange, selectedOrderSource, setOrderItems }: Props) => {
+
     return (
         <Dialog open={open} onClose={onClose}>
             <DialogTitle>{edit ? "Bestellung bearbeiten" : "Neue Bestellung"}</DialogTitle>
@@ -55,40 +54,15 @@ const OrderDialog = ({ open, edit, order, products, orderItems, onClose, onSubmi
 
                 </Box>
                 <TextField label="Notiz (optional)" name="note" value={order.note} multiline rows={3} variant="outlined" fullWidth sx={{ marginY: "4px" }} onChange={onChange} />
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>Produkt</TableCell>
-                            <TableCell>Menge</TableCell>
-                            <TableCell>Aktionen</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {orderItems.map((item, index) => (
-                            <TableRow key={index}>
-                                <TableCell>
-                                    <Select value={item.product?.id || ""} onChange={(e) => onProductChange(index, Number(e.target.value))} displayEmpty fullWidth>
-                                        <MenuItem value="" disabled>Produkt wählen</MenuItem>
-                                        {products.map(product => (
-                                            <MenuItem key={product.id} value={product.id}>{product.name}</MenuItem>
-                                        ))}
-                                    </Select>
-                                </TableCell>
-                                <TableCell>
-                                    <TextField type="number" value={item.quantity} onChange={(e) => onQuantityChange(index, Number(e.target.value))} fullWidth inputRef={(input) => input && input.setAttribute("min", "1")} />
-                                </TableCell>
-                                <TableCell>
-                                    <IconButton onClick={() => onDeleteProduct(index)}>
-                                        <DeleteIcon color="error" />
-                                    </IconButton>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-                <Button variant="contained" startIcon={<AddIcon />} fullWidth sx={{ marginTop: "8px" }} onClick={onAddProduct}>
-                    Produkt hinzufügen
+                <Button variant="contained" fullWidth sx={{ marginTop: "8px" }} onClick={onAddProduct}>
+                    Produkte verwalten
                 </Button>
+                <OrderItemsDialog
+                    isProductDialogOpen={isProductDialogOpen}
+                    onProductDialogClose={onProductDialogClose}
+                    products={products}
+                    setOrderItems={setOrderItems}
+                />
             </DialogContent>
             <DialogActions>
                 <Button onClick={onClose} color="error">Abbrechen</Button>
