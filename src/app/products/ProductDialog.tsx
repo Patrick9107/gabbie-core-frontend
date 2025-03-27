@@ -25,21 +25,34 @@ interface Props {
 }
 
 function ProductDialog({ open, edit, product, onClose, onSubmit, onChange, onContainerChange, containers }: Props) {
-    const [errors, setErrors] = useState({
+    interface error {
+        name?: string;
+        price?: string;
+        weight?: string;
+    }
+
+    const noErrors = {
         name: "",
         price: "",
         weight: "",
-    });
+    };
+
+    const [errors, setErrors] = useState<error>(noErrors);
 
     // Überprüft, ob alle erforderlichen Felder ausgefüllt sind
     const validateForm = () => {
-        const newErrors: any = {};
+        const newErrors: error = {};
         if (!product.name) newErrors.name = "Name ist erforderlich";
         if (!product.price) newErrors.price = "Preis ist erforderlich";
         if (!product.weight) newErrors.weight = "Gewicht ist erforderlich";
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
+
+    const onCloseDialog = () => {
+        setErrors(noErrors);
+        onClose();
+    }
 
     // Form submit Handler
     const handleSubmit = () => {
@@ -49,7 +62,7 @@ function ProductDialog({ open, edit, product, onClose, onSubmit, onChange, onCon
     };
 
     return (
-      <Dialog open={open} onClose={onClose}>
+      <Dialog open={open} onClose={onCloseDialog}>
           <DialogTitle>{edit ? "Produkt bearbeiten" : "Neues Produkt"}</DialogTitle>
           <DialogContent>
               <TextField
