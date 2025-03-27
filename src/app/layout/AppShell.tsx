@@ -23,6 +23,16 @@ const drawerWidth = 240;
 function AppShell() {
   const navigate = useNavigate();
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState('/'); // Track active item
+
+  const handleNavClick = (link: string, action?: () => void) => {
+    if (action) {
+      action(); // Handle logout separately
+    } else {
+      setSelectedItem(link);
+      navigate(link);
+    }
+  };
 
   const handleLogoutClick = () => {
     setLogoutDialogOpen(true);
@@ -73,7 +83,13 @@ function AppShell() {
         <List>
           {navItems.map(({ text, link, icon, action }) => (
             <ListItem key={text} disablePadding>
-              <ListItemButton onClick={action || (() => navigate(link))}>
+              <ListItemButton
+                onClick={() => handleNavClick(link, action)}
+                sx={{
+                  backgroundColor: selectedItem === link ? '#ddd' : 'inherit',
+                  '&:hover': { backgroundColor: '#ccc' },
+                }}
+              >
                 <ListItemIcon>{icon}</ListItemIcon>
                 <ListItemText primary={text} />
               </ListItemButton>
