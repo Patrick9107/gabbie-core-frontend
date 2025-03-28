@@ -10,6 +10,7 @@ import {Typography} from "@mui/material";
 import {OrderResponse} from "../../domain/OrderResponse.ts";
 import {OrderItem} from "../../domain/OrderItem.ts";
 import {fetchProducts} from "../../infra/api/productService.ts";
+import * as console from "node:console";
 
 
 const defaultOrder: OrderResponse = {
@@ -73,6 +74,11 @@ function ListOrders() {
     const [availableProducts, setAvailableProducts] = useState<Product[]>([]);
     const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
 
+    useEffect(() => {
+        window.console.log(newOrderProducts); // This will always show the latest state
+    }, [newOrderProducts]);
+
+
     const handleOpenProductDialog = () => {
         setIsProductDialogOpen(true);
     };
@@ -115,9 +121,9 @@ function ListOrders() {
         setIsOpen(false);
         setEdit(false);
         setNewOrder(defaultOrder);
-        setNewOrderProducts([]);
         setSelectedOrderSource(null);
-    };
+        setNewOrderProducts([]);
+    }
 
 
     const handleCancel = () => {
