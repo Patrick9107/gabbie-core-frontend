@@ -42,7 +42,7 @@ const SaveRoute: React.FC<SaveRouteProps> = ({ routeData }) => {
             startTime: new Date().toISOString(),
             endTime: new Date(new Date().getTime() + routeData.rawStops.reduce((sum, stop) => sum + stop.arrival, 0) * 60000).toISOString(),
             routeData: JSON.stringify(routeData),
-            vehicleId: selectedVehicle, 
+            vehicleId: selectedVehicle,
         };
 
         try {
@@ -60,11 +60,39 @@ const SaveRoute: React.FC<SaveRouteProps> = ({ routeData }) => {
 
             const savedRoute = await response.json();
             console.log("Route saved successfully:", savedRoute);
-            setOpenDialog(false); 
+            
+            const vehicleToUpdate = vehicles.find(vehicle => vehicle.id === selectedVehicle);
+
+            if (!vehicleToUpdate) {
+                throw new Error("Selected vehicle not found");
+            }
+            
+            const updateVehicleResponse = await fetch(`${API_BASE_URL}/Vehicle/${selectedVehicle}`, {
+                method: "PUT", // vielleich sollte das Patch sein und nicht put
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    licensePlate: vehicleToUpdate.licensePlate,
+                    capacity: vehicleToUpdate.capacity,
+                    status: vehicleToUpdate.status,
+                    routeId: savedRoute.id,
+                }),
+            });
+
+            if (!updateVehicleResponse.ok) {
+                throw new Error("Failed to update vehicle with routeId");
+            }
+
+            console.log("Vehicle updated successfully with new routeId.");
+            
+            setOpenDialog(false);
         } catch (error) {
-            console.error("Error saving route:", error);
+            console.error("Error saving route or updating vehicle:", error);
         }
     };
+
+
 
     return (
         <div>

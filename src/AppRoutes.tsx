@@ -9,6 +9,7 @@ import ListProducts from "./app/products/ListProducts";
 import RoutesPage from "./app/routes/Routes.tsx";
 import DriverPage from "./app/driver/DriverPage.tsx";
 import CircularProgress from '@mui/material/CircularProgress';
+import HistoryPage from "./app/history/HistoryPage.tsx";
 import Box from '@mui/material/Box';
 import { useAuth } from './app/login/AuthProvider';
 
@@ -48,6 +49,7 @@ function AppRoutes() {
           <Route path="/produkte" element={<RequireAuth><ListProducts /></RequireAuth>} />
           <Route path="/fahrzeuge" element={<RequireAuth><VehicleList /></RequireAuth>} />
           <Route path="/routes" element={<RequireAuth><RoutesPage /></RequireAuth>}  />
+          <Route path="/history" element={<RequireAuth><HistoryPage /></RequireAuth>}  />
           <Route path="/logout" element={<Logout />} />
         </Route>
       </Routes>

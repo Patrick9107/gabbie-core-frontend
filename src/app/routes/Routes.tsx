@@ -1,12 +1,12 @@
-﻿import React, {useState} from "react";
+﻿import React, { useEffect, useState } from "react";
 import AddressInput from "./AddressInput";
 import MapComponent from "./Map";
 import RouteDialog from "./RouteDialog";
 import SaveRoute from "./SaveRoute";
-import {Box, Typography} from "@mui/material";
-import {Order} from "../../domain/Order.ts";
-import {Stop} from "../../domain/Stop.ts"
-import {useLocation} from "react-router-dom";
+import { Box, Typography, Dialog, DialogActions, DialogContent, DialogTitle, Button } from "@mui/material";
+import { Order } from "../../domain/Order.ts";
+import { Stop } from "../../domain/Stop.ts";
+import { useLocation } from "react-router-dom";
 import AddressList from "./AddressList";
 import { handleGetRoute } from "./RouteUtils.tsx";
 
@@ -21,21 +21,22 @@ interface RouteState {
 const RoutesPage: React.FC = () => {
     const [routeData, setRouteData] = useState<RouteState | null>(null);
     const [openDialog, setOpenDialog] = useState(false);
-    const [selectedStop, setSelectedStop] = useState<Stop | null>(null);
-    
-    console.log("RouteData: " + routeData);
-    
+    const [openErrorDialog, setOpenErrorDialog] = useState(false);
+    const [selectedStop] = useState<Stop | null>(null);
+    const [error, setError] = useState<string | null>(null);
+
     const location = useLocation();
     const initialOrders: Order[] = location.state?.orders || [];
+
+    useEffect(() => {
+        if (initialOrders.length > 0) {
+            fetchRouteData(initialOrders);
+        }
+    }, [initialOrders]);
 
     const handleExportToGoogleMaps = (address: string) => {
         const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
         window.open(url, "_blank");
-    };
-
-    const handleOpenDialog = (stop: Stop) => {
-        setSelectedStop(stop);
-        setOpenDialog(true);
     };
 
     const handleCloseDialog = () => {
@@ -64,10 +65,12 @@ const RoutesPage: React.FC = () => {
 
     const fetchRouteData = async (orders: Order[]) => {
         try {
-            const result = await handleGetRoute(orders);
+            const result = await handleGetRoute(orders, "Reisenberg");
             setRouteData(result);
         } catch (error) {
             console.error("Fehler beim Abrufen der Route:", error);
+            setError("Es gab ein Problem bei der Routenberechnung. Bitte überprüfen Sie die Adressen.");
+            setOpenErrorDialog(true);  // Show the error dialog
         }
     };
 
@@ -89,9 +92,21 @@ const RoutesPage: React.FC = () => {
             <AddressList
                 stops={routeData?.rawStops}
                 handleStatusChange={handleStatusChange}
-                handleOpenDialog={handleOpenDialog}
                 handleExportToGoogleMaps={handleExportToGoogleMaps}
             />
+            
+            <Dialog open={openErrorDialog} onClose={() => setOpenErrorDialog(false)}>
+                <DialogTitle>Fehler bei der Routenberechnung</DialogTitle>
+                <DialogContent>
+                    <Typography>{error}</Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenErrorDialog(false)} color="primary">
+                        Schließen
+                    </Button>
+                </DialogActions>
+            </Dialog>
+            
             <RouteDialog open={openDialog} stop={selectedStop} onClose={handleCloseDialog} onSave={handleDialogSave} />
         </Box>
     );

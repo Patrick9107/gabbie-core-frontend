@@ -12,8 +12,6 @@ const fetchRouteData = async (requestBody: any) => {
             body: JSON.stringify(requestBody),
         });
 
-        console.log(response)
-        
         if (!response.ok) {
             throw new Error(`Failed to fetch route with status: ${response.status}`);
         }
@@ -25,56 +23,61 @@ const fetchRouteData = async (requestBody: any) => {
     }
 };
 
-const createStop = (address: string, index: number, orders: Order[], routeData: any): Stop => {
-    const matchingOrder = orders.find((order) => order.address === address) || {
-        id: 0,
-        address,
-        phoneNumber: "",
-        orderItems: [],
-        orderStatus: OrderStatus.Ausstehend,
-        note: "",
-        orderSource: OrderSource.SMS,
-        deliveryDate: null,
-        deliveryWindowStartDate: null,
-        deliveryWindowEndDate: null,
-    };
-
-    return {
-        name: address,
-        arrival: routeData.route[index + 1]?.arrival || 0,
-        distance: routeData.route[index + 1]?.distance || 0,
-        status: "pending",
-        products: matchingOrder.orderItems.map((item) => item.product.name).join(", ") || "Keine Produkte",
-        customerData: matchingOrder.phoneNumber,
-        note: matchingOrder.note,
-        order: matchingOrder,
-    };
-};
-
-export const handleGetRoute = async (orders: Order[]) => {
+export const handleGetRoute = async (orders: Order[], fixedStartAddress: string) => {
     try {
         const requestBody = {
-            locations: orders.map((order) => ({ address: order.address, serviceTime: 8 })),
+            locations: [
+                { address: fixedStartAddress},
+                ...orders.map((order) => ({ address: order.address})), //servicetime wird im Backend gemacht
+            ],
+            parameters: [
+                {type: 'car'},
+            ],
         };
 
-        console.log("Request Body to RouteXL API:", JSON.stringify(requestBody, null, 2));
-        
+        console.log("Request Body:", JSON.stringify(requestBody, null, 2));
+
         const routeData = await fetchRouteData(requestBody);
 
-        console.log("RouteXL Response:", routeData);
+        console.log("RouteXL Response:", JSON.stringify(routeData, null, 2));
 
-        const orderedAddresses = Object.values(routeData.route).map((stop: any) => stop.name);
-        
-        const rawStops: Stop[] = orderedAddresses.slice(1).map((address, index) => createStop(address, index, orders, routeData));
+        let orderedAddresses = Object.values(routeData.route).map((stop: any) => stop.name);
 
-        const origin = orderedAddresses[0];
-        const destination = orderedAddresses[orderedAddresses.length - 1];
-        const waypoints = orderedAddresses.slice(1, -1).map((address) => ({ location: address, stopover: true }));
+        if (orderedAddresses[0] !== fixedStartAddress) {
+            orderedAddresses.unshift(fixedStartAddress);
+        }
+
+        const rawStops: Stop[] = orderedAddresses.map((address, index) => {
+            const matchingOrder = orders.find((order) => order.address === address) || {
+                id: 0,
+                address,
+                phoneNumber: "",
+                orderItems: [],
+                orderStatus: OrderStatus.Ausstehend,
+                note: "",
+                orderSource: OrderSource.SMS,
+                deliveryDate: null,
+                deliveryWindowStartDate: null,
+                deliveryWindowEndDate: null,
+            };
+
+            const stopData = routeData.route[index];
+            return {
+                name: address,
+                arrival: index === 0 ? 0 : stopData.arrival,
+                distance: index === 0 ? 0 : stopData.distance,
+                status: "pending",
+                products: matchingOrder.orderItems.map((item) => item.product.name).join(", ") || "Keine Produkte",
+                customerData: matchingOrder.phoneNumber,
+                note: matchingOrder.note,
+                order: matchingOrder,
+            };
+        });
 
         return {
-            origin,
-            destination,
-            waypoints,
+            origin: orderedAddresses[0],
+            destination: orderedAddresses[orderedAddresses.length - 1],
+            waypoints: orderedAddresses.slice(1, -1).map((address) => ({ location: address, stopover: true })),
             rawStops,
             orderIds: rawStops.map((stop) => stop.order.id),
         };

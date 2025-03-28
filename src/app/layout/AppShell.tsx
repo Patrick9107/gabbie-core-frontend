@@ -12,6 +12,7 @@ import ListItemText from '@mui/material/ListItemText';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import LocalMallIcon from '@mui/icons-material/LocalMall';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import HistoryIcon from '@mui/icons-material/History';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import InventoryOutlinedIcon from '@mui/icons-material/InventoryOutlined';
 import { Outlet, useNavigate } from 'react-router-dom';
@@ -42,7 +43,8 @@ function AppShell() {
     { text: 'Bestellungsübersicht', link: '/bestellungen', icon: <LocalMallIcon /> },
     { text: 'Produkte', link: '/produkte', icon: <InventoryOutlinedIcon /> },
     { text: 'Routenplanung', link: '/routes', icon: <AddLocationAlt /> },
-    { text: 'Fahrzeuge', link: '/fahrzeuge', icon: <LocalShippingIcon /> },
+    { text: 'Fahrzeuge', link: '/fahrzeuge', icon: <LocalShippingIcon /> }, 
+    { text: 'Vorherige Routen', link: '/history', icon: <HistoryIcon /> },
     { text: 'Logout', link: '/logout', icon: <ExitToAppIcon />, action: handleLogoutClick }
   ];
 

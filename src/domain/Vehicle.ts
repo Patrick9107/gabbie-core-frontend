@@ -5,4 +5,5 @@ export interface Vehicle extends BaseEntity {
     licensePlate: string;
     capacity: number;
     status: VehicleStatus;
+    routeId: number;
 }
