@@ -183,6 +183,7 @@ function ListOrders() {
                 selectedOrderSource={selectedOrderSource}
                 onAddProduct={handleOpenProductDialog}
                 setOrderItems={handleSetOrderItems}
+                newOrderItems={newOrderProducts}
             />
 
             <DeleteConfirmationDialog open={deleteConfirm} onClose={() => setDeleteConfirm(false)} onConfirm={handleDelete} />

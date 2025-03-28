@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import {
     Button,
     Dialog,
@@ -16,11 +16,16 @@ interface Props {
     onProductDialogClose: () => void;
     products: Product[];
     setOrderItems: (items: { product: Product | null; quantity: number }[]) => void;
+    newOrderItems: { product: Product | null; quantity: number }[];
 }
 
-const OrderItemsDialog = ({ isProductDialogOpen, onProductDialogClose, products, setOrderItems }: Props) => {
+const OrderItemsDialog = ({ isProductDialogOpen, onProductDialogClose, products, setOrderItems, newOrderItems }: Props) => {
 
-    const [selectedOrderItems, setSelectedOrderItems] = useState<{ product: Product | null; quantity: number }[]>([]);
+    const [selectedOrderItems, setSelectedOrderItems] = useState<{ product: Product | null; quantity: number }[]>(newOrderItems);
+
+    useEffect(() => {
+        setOrderItems(selectedOrderItems);
+    }, [selectedOrderItems, setOrderItems]);
 
     const handleAddButtonClicked = (product: Product) => {
         setSelectedOrderItems(prevItems => {
@@ -40,7 +45,6 @@ const OrderItemsDialog = ({ isProductDialogOpen, onProductDialogClose, products,
                 return [...prevItems, { product, quantity: 1 }];
             }
         });
-        setOrderItems(selectedOrderItems);
     }
 
     const handleRemoveButtonClicked = (product: Product) => {
@@ -68,7 +72,6 @@ const OrderItemsDialog = ({ isProductDialogOpen, onProductDialogClose, products,
 
             return updatedItems.filter((_, index) => index !== existingItemIndex);
         });
-        setOrderItems(selectedOrderItems);
     }
 
     return (
@@ -89,7 +92,8 @@ const OrderItemsDialog = ({ isProductDialogOpen, onProductDialogClose, products,
                         flex: 1,
                         pl: 2,
                         display: 'flex',
-                        flexDirection: 'column'
+                        flexDirection: 'column',
+                        overflow: 'auto'
                     }}>
                         <Typography variant="h5">
                             Übersicht

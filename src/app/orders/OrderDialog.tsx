@@ -23,9 +23,10 @@ interface Props {
     onOrderSourceChange: (id: number) => void;
     selectedOrderSource: number | null;
     setOrderItems: (items: { product: Product | null; quantity: number }[]) => void;
+    newOrderItems:  { product: Product | null; quantity: number }[];
 }
 
-const OrderDialog = ({ open, edit, isProductDialogOpen, onProductDialogClose, order, products, onClose, onSubmit, onChange, onDateChange, onAddProduct, onOrderSourceChange, selectedOrderSource, setOrderItems }: Props) => {
+const OrderDialog = ({ open, edit, isProductDialogOpen, onProductDialogClose, order, products, onClose, onSubmit, onChange, onDateChange, onAddProduct, onOrderSourceChange, selectedOrderSource, setOrderItems, newOrderItems }: Props) => {
 
     return (
         <Dialog open={open} onClose={onClose}>
@@ -62,6 +63,7 @@ const OrderDialog = ({ open, edit, isProductDialogOpen, onProductDialogClose, or
                     onProductDialogClose={onProductDialogClose}
                     products={products}
                     setOrderItems={setOrderItems}
+                    newOrderItems={newOrderItems}
                 />
             </DialogContent>
             <DialogActions>
