@@ -92,8 +92,8 @@ const AddressList: React.FC<AddressListProps> = ({ stops, handleStatusChange, ha
                         <FormControl size="small" sx={{ minWidth: 100, flex: 1 }}>
                             <InputLabel>Status</InputLabel>
                             <Select
-                                value={stop.status}
-                                onChange={(e) => handleStatusChange(index, e.target.value)}
+                                value={stops[index + 1]?.status || ""}
+                                onChange={(e) => handleStatusChange(index + 1, e.target.value)}
                             >
                                 <MenuItem value="pending">Pending</MenuItem>
                                 <MenuItem value="delivered">Delivered</MenuItem>
