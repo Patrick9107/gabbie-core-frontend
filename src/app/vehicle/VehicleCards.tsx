@@ -22,7 +22,7 @@ function VehicleCards({ vehicles, onDelete, onEdit }: Props) {
                     <Card
                         key={vehicle.id}
                         sx={{
-                            width: 500,
+                            width: 600,
                             minHeight: 250,
                             display: "flex",
                             flexDirection: "column",

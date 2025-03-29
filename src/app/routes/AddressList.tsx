@@ -66,7 +66,7 @@ const AddressList: React.FC<AddressListProps> = ({ stops, handleStatusChange, ha
                 <Typography variant="h5" sx={{ mb: 2 }}>
                     Stopps auf der Route
                 </Typography>
-                {stops.map((stop, index) => (
+                {stops.slice(1).map((stop, index) => (
                     <Box
                         key={index}
                         sx={{
