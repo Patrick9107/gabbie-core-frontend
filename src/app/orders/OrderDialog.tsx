@@ -35,15 +35,9 @@ const OrderDialog = ({ open, edit, isProductDialogOpen, onProductDialogClose, or
                 <TextField label="Telefonnummer" name="phoneNumber" value={order.phoneNumber} fullWidth margin="dense" onChange={onChange} />
                 <TextField label="Adresse" name="address" value={order.address} fullWidth margin="dense" onChange={onChange} />
                 <Box sx={{ display: "flex", gap: "8px", marginY: "4px" }}>
-                    <LocalizationProvider dateAdapter={AdapterDayjs}>
-                        <DatePicker label="Lieferdatum (optional)" value={order.deliveryDate ? dayjs(order.deliveryDate) : null} onChange={onDateChange} />
+                    <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="de">
+                        <DatePicker label="Lieferdatum (optional)" value={order.deliveryDate ? dayjs(order.deliveryDate) : null} onChange={onDateChange} format="DD.MM.YYYY"/>
                     </LocalizationProvider>
-                    {/*<Select value={selectedVehicle ?? ""} onChange={(e) => onVehicleChange(Number(e.target.value))} displayEmpty>*/}
-                    {/*    <MenuItem value="">Work in Progress</MenuItem>*/}
-                    {/*    {vehicles.map(vehicle => (*/}
-                    {/*        <MenuItem key={vehicle.id} value={vehicle.id} disabled>{vehicle.licensePlate}</MenuItem>*/}
-                    {/*    ))}*/}
-                    {/*</Select>*/}
                     <Select value={selectedOrderSource ?? ""} onChange={(e) => onOrderSourceChange(Number(e.target.value))} displayEmpty fullWidth sx={{width: "50%"}}>
                         <MenuItem value="" disabled>Quelle auswählen</MenuItem>
                         {Object.entries(OrderSource)
