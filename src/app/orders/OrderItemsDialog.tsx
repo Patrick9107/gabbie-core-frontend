@@ -23,9 +23,17 @@ const OrderItemsDialog = ({ isProductDialogOpen, onProductDialogClose, products,
 
     const [selectedOrderItems, setSelectedOrderItems] = useState<{ product: Product | null; quantity: number }[]>(newOrderItems);
 
-    useEffect(() => {
+    const onProductDialogCloseClearItems = () => {
         setOrderItems(selectedOrderItems);
-    }, [selectedOrderItems, setOrderItems]);
+        setSelectedOrderItems([]);
+        onProductDialogClose();
+    }
+    
+    useEffect(() => {
+       if (isProductDialogOpen) {
+           setSelectedOrderItems(newOrderItems);
+       } 
+    }, [isProductDialogOpen, newOrderItems]);
 
     const handleAddButtonClicked = (product: Product) => {
         setSelectedOrderItems(prevItems => {
@@ -74,12 +82,33 @@ const OrderItemsDialog = ({ isProductDialogOpen, onProductDialogClose, products,
         });
     }
 
+    const onQuantityChange = (quantity: number, product: Product) => {
+        setSelectedOrderItems(prevItems => {
+            const existingItem = prevItems.find(item => item.product?.id === product.id);
+
+            if (existingItem) {
+                if (quantity === 0) {
+                    return prevItems.filter(item => item.product?.id !== product.id);
+                }
+
+                return prevItems.map(item =>
+                    item.product?.id === product.id
+                        ? { ...item, quantity }
+                        : item
+                );
+            }
+
+            return [...prevItems, { product, quantity }];
+        });
+    };
+
+
     return (
         <Dialog
             maxWidth="xl"
             sx={{ '& .MuiDialog-paper': { height: '600px' } }}
             open={isProductDialogOpen}
-            onClose={onProductDialogClose}
+            onClose={onProductDialogCloseClearItems}
         >
             <DialogContent>
 
@@ -129,12 +158,13 @@ const OrderItemsDialog = ({ isProductDialogOpen, onProductDialogClose, products,
                             onAddClicked={handleAddButtonClicked}
                             onRemoveButtonClicked={handleRemoveButtonClicked}
                             quantities={Object.fromEntries(selectedOrderItems.map(item => [item.product?.id, item.quantity]))}
+                            onQuantityChange={onQuantityChange}
                         />
                     </Box>
                 </Box>
             </DialogContent>
             <DialogActions>
-                <Button onClick={onProductDialogClose} color="secondary">
+                <Button onClick={onProductDialogCloseClearItems} color="secondary">
                     Zurück
                 </Button>
             </DialogActions>

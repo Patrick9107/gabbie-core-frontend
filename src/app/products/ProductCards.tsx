@@ -21,9 +21,10 @@ interface Props {
     onAddClicked?: (product: Product) => void;
     onRemoveButtonClicked?: (product: Product) => void;
     quantities?: { [id: number]: number };
+    onQuantityChange?: (quantity: number, product: Product) => void;
 }
 
-function ProductCards({ products, onDelete, onEdit, onAddClicked, onRemoveButtonClicked, quantities }: Props) {
+function ProductCards({ products, onDelete, onEdit, onAddClicked, onRemoveButtonClicked, quantities, onQuantityChange }: Props) {
     return (
         <Box sx={{ mt: 4 }}>
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
@@ -97,11 +98,31 @@ function ProductCards({ products, onDelete, onEdit, onAddClicked, onRemoveButton
                                     <TextField
                                         size="small"
                                         sx={{ width: "4em", textAlign: "center" }}
-                                        type="number"
-                                        value={!(quantities) || quantities[product.id] || 0}
+                                        type="text"
+                                        value={quantities?.[product.id] !== undefined ? quantities[product.id] : "0"}
                                         onClick={(event) => event.stopPropagation()}
-                                        slotProps={{ htmlInput: { readOnly: true } }}
+                                        onFocus={(event) => {
+                                            if (event.target.value === "0") {
+                                                event.target.value = "";
+                                            }
+                                        }}
+                                        onBlur={(event) => {
+                                            if (event.target.value === "") {
+                                                event.target.value = "0";
+                                            }
+                                        }}
+                                        onChange={(event) => {
+                                            const inputValue = event.target.value.trim();
+
+                                            if (/^-?\d*$/.test(inputValue)) {
+                                                const newQuantity = parseInt(inputValue, 10) || 0;
+                                                if (onQuantityChange) {
+                                                    onQuantityChange(newQuantity, product);
+                                                }
+                                            }
+                                        }}
                                     />
+
                                     <IconButton
                                         size="large"
                                         color="success"
