@@ -16,11 +16,16 @@ interface Props {
 }
 
 const ProductCard = ({product, onDelete, onEdit, onAddClicked, onRemoveButtonClicked, quantities, onQuantityChange}: Props) => {
+    
+    const productView = !!onDelete && !!onEdit;
+
+    const cardWidth =  productView ? 290 : 185;
+    
     return <Card
         key={product.id}
         onClick={onAddClicked ? () => onAddClicked(product) : undefined}
         sx={{
-            width: 290,
+            width: cardWidth,
             display: "flex",
             flexDirection: "column",
             borderRadius: 3,
@@ -42,7 +47,7 @@ const ProductCard = ({product, onDelete, onEdit, onAddClicked, onRemoveButtonCli
             sx={{ height: 180, objectFit: "contain", padding: (theme) => theme.spacing(2) }}
         />
 
-        { onEdit &&
+        { productView &&
             <Box sx={{ textAlign: "center", mt: 1 }}>
                 <div><strong>Preis:</strong> {product.price} €</div>
                 <div><strong>Gewicht:</strong> {product.weight} kg</div>
@@ -73,7 +78,7 @@ const ProductCard = ({product, onDelete, onEdit, onAddClicked, onRemoveButtonCli
                     Löschen
                 </Button>
             )}
-            {onAddClicked && onRemoveButtonClicked && (
+            {!productView && onRemoveButtonClicked && onAddClicked && (
                 <Box sx={{ display: "flex", alignItems: "center" }}>
                     <IconButton
                         size="large"

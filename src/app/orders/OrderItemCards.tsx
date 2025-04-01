@@ -12,9 +12,10 @@ interface Props {
 
 const OrderItemCards = ({products, onAddClicked, onRemoveButtonClicked, quantities, onQuantityChange}: Props) => {
     return (
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
             {products.map((product) => (
             <ProductCard
+                key={product.id}
                 product={product}
                 onAddClicked={onAddClicked}
                 onRemoveButtonClicked={onRemoveButtonClicked}
