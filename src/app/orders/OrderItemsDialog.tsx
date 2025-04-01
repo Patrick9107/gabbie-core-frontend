@@ -115,11 +115,10 @@ const OrderItemsDialog = ({ isProductDialogOpen, onProductDialogClose, products,
                 <Box sx={{
                     display: 'flex',
                     width: '100%',
-                    height: '500px'
+                    height: '100%'
                 }}>
                     <Box sx={{
                         flex: 1,
-                        pl: 2,
                         display: 'flex',
                         flexDirection: 'column',
                         overflow: 'auto'
@@ -153,6 +152,7 @@ const OrderItemsDialog = ({ isProductDialogOpen, onProductDialogClose, products,
                         overflow: 'auto',
                         pr: 2
                     }}>
+
                         <OrderItemCards
                             products={products}
                             onAddClicked={handleAddButtonClicked}

@@ -74,11 +74,6 @@ function ListOrders() {
     const [availableProducts, setAvailableProducts] = useState<Product[]>([]);
     const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
 
-    useEffect(() => {
-        window.console.log(newOrderProducts); // This will always show the latest state
-    }, [newOrderProducts]);
-
-
     const handleOpenProductDialog = () => {
         setIsProductDialogOpen(true);
     };
