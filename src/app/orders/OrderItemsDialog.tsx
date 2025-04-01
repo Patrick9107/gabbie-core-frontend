@@ -8,8 +8,8 @@ import {
     Typography,
     Divider, Table, TableHead, TableBody, TableRow, TableCell
 } from "@mui/material";
-import ProductCards from "../products/ProductCards.tsx";
 import { Product } from "../../domain/Product.ts";
+import OrderItemCards from "./OrderItemCards.tsx";
 
 interface Props {
     isProductDialogOpen: boolean;
@@ -153,7 +153,7 @@ const OrderItemsDialog = ({ isProductDialogOpen, onProductDialogClose, products,
                         overflow: 'auto',
                         pr: 2
                     }}>
-                        <ProductCards
+                        <OrderItemCards
                             products={products}
                             onAddClicked={handleAddButtonClicked}
                             onRemoveButtonClicked={handleRemoveButtonClicked}
