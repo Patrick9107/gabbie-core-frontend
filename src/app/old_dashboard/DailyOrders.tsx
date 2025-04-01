@@ -17,16 +17,20 @@ export function useOrders() {
         const loadOrders = async () => {
             try {
                 const fetchedOrders = await fetchOrders();
-                setOrders(fetchedOrders);
+                setOrders(Array.isArray(fetchedOrders) ? fetchedOrders : []);
             } catch (error) {
                 console.error("Failed to fetch orders:", error);
+                setOrders([]);
             }
         };
 
         loadOrders();
+        const interval = setInterval(loadOrders, 5000); // Alle 5 Sekunden neu laden
+
+        return () => clearInterval(interval);
     }, []);
 
-    return orders;
+    return orders.slice(-3);
 }
 
 export default function OrderTimeline() {
