@@ -1,15 +1,27 @@
 import { Paper, Typography, Table, TableHead, TableRow, TableCell, TableBody } from "@mui/material";
-
-const orders = [
-    { date: "19 Feb 2024", name: "Jakub Wachal", address: "7 PM", products: 9, price: "1 hrs", deposit: "-" },
-    { date: "20 Feb 2024", name: "Patrick Poppinger", address: "7 PM", products: 9, price: "1 hrs", deposit: "-" },
-    { date: "21 Feb 2024", name: "Benedik Hidalgo", address: "7 PM", products: 9, price: "1 hrs", deposit: "10-\u20ac" },
-    { date: "22 Feb 2024", name: "Teric Marko", address: "7 PM", products: 9, price: "1 hrs", deposit: "-" },
-    { date: "23 Feb 2024", name: "Rene Grandlits", address: "7 PM", products: 9, price: "1 hrs", deposit: "5-\u20ac" },
-    { date: "24 Feb 2024", name: "Rene Wenz", address: "7 PM", products: 9, price: "1 hrs", deposit: "-" },
-];
+import { useEffect, useState } from "react";
+import { fetchOrders } from "../../infra/api/orderService.ts";
+import { OrderResponse } from "../../domain/OrderResponse.ts";
 
 function OrderList() {
+    const [orders, setOrders] = useState<OrderResponse[]>([]);
+
+    useEffect(() => {
+        const loadOrders = async () => {
+            try {
+                const fetchedOrders: OrderResponse[] = await fetchOrders();
+                const sortedOrders = fetchedOrders
+                    .filter(order => order.createdAt !== null)
+                    .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime())
+                    .slice(0, 10);
+                setOrders(sortedOrders);
+            } catch (error) {
+                console.error("Failed to fetch orders:", error);
+            }
+        };
+        loadOrders();
+    }, []);
+
     return (
         <Paper sx={{ p: 2 }}>
             <Typography variant="h6">Bestellübersicht</Typography>
@@ -18,23 +30,19 @@ function OrderList() {
                     <TableRow>
                         <TableCell>Best Nr.</TableCell>
                         <TableCell>Datum</TableCell>
-                        <TableCell>Name</TableCell>
                         <TableCell>Adresse</TableCell>
                         <TableCell>Produkte</TableCell>
                         <TableCell>Preis</TableCell>
-                        <TableCell>Pfand</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
                     {orders.map((order, index) => (
-                        <TableRow key={index}>
+                        <TableRow key={order.id}>
                             <TableCell>{index + 1}</TableCell>
-                            <TableCell>{order.date}</TableCell>
-                            <TableCell>{order.name}</TableCell>
+                            <TableCell>{order.createdAt ? new Date(order.createdAt).toLocaleDateString("de-DE", { day: "2-digit", month: "short", year: "numeric" }) : "-"}</TableCell>
                             <TableCell>{order.address}</TableCell>
-                            <TableCell>{order.products}</TableCell>
-                            <TableCell>{order.price}</TableCell>
-                            <TableCell>{order.deposit}</TableCell>
+                            <TableCell>{order.orderItems.length}</TableCell>
+                            <TableCell>{order.totalAmount.toFixed(2)}€</TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
