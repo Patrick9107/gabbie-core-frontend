@@ -5,7 +5,7 @@ import {
     Dialog,
     DialogActions,
     DialogContent,
-    DialogTitle,
+    DialogTitle, InputAdornment,
     MenuItem,
     Select,
     TextField,
@@ -86,17 +86,27 @@ function ProductDialog({ open, edit, product, onClose, onSubmit, onChange, onCon
                     onChange={onChange}
                     error={!!errors.price}
                     helperText={errors.price}
+                    slotProps={{
+                        input: {
+                            endAdornment: <InputAdornment position="end">€</InputAdornment>
+                        }
+                    }}
                   />
                   <TextField
-                    label="Gewicht"
-                    name="weight"
-                    type="number"
-                    value={product.weight}
-                    fullWidth
-                    margin="dense"
-                    onChange={onChange}
-                    error={!!errors.weight}
-                    helperText={errors.weight}
+                      label="Gewicht"
+                      name="weight"
+                      type="number"
+                      value={product.weight}
+                      fullWidth
+                      margin="dense"
+                      onChange={onChange}
+                      error={!!errors.weight}
+                      helperText={errors.weight}
+                      slotProps={{
+                          input: {
+                              endAdornment: <InputAdornment position="end">kg</InputAdornment>
+                          }
+                      }}
                   />
               </Box>
               <TextField
