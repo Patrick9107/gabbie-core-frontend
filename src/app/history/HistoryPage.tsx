@@ -23,6 +23,7 @@ const HistoryPage: React.FC = () => {
         };
 
         fetchRoutes();
+        document.title = "Routenverlauf";
     }, []);
     
     const handleStopsClick = (routeId: number) => {

@@ -34,6 +34,10 @@ const RoutesPage: React.FC = () => {
         }
     }, [initialOrders]);
 
+    useEffect(() => {
+        document.title = "Routenplanung";
+    }, []);
+
     const handleExportToGoogleMaps = (address: string) => {
         const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
         window.open(url, "_blank");

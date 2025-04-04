@@ -1,0 +1,14 @@
+.title {
+    font-weight: bold;
+}
+
+.addButton {
+    margin-bottom: 2px;
+}
+
+.dateOrderSourceBox {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+}

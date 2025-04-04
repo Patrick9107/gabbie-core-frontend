@@ -11,6 +11,7 @@ import {OrderResponse} from "../../domain/OrderResponse.ts";
 import {OrderItem} from "../../domain/OrderItem.ts";
 import {fetchProducts} from "../../infra/api/productService.ts";
 import * as console from "node:console";
+import styles from './Order.module.css';
 
 
 const defaultOrder: OrderResponse = {
@@ -32,8 +33,6 @@ const defaultOrder: OrderResponse = {
 /* todo
 // grundsätzlich funktioniert die api aber es sind noch einige dinge zu tun:
 // Ein paar felder dürfen nicht leer gelassen werden (z.b. telefonnummer, 1 produkt muss mindestens hinzugefügt werden, etc., edit: bzw. dürfen sie schon leergelassen werden aber wenn was fehlt sollte ja irgendwie es orange oder so markiert werden)
-// Fahrzeugauswahl (ist keine priorität, kann später gemacht werden. oder vielleicht sogar garnicht ka ob wir es überhaupt brauchen, edit: habs mal weggemacht glaube das brauchen wir hier nicht)
-// Produkte werden noch nicht bei der api mitgeschickt ✅
 // wenn error kommt sollte er irgendwo anders als in der konsole ersichtlich sein
 */
 
@@ -60,6 +59,7 @@ function ListOrders() {
 
         loadOrders();
         loadProducts();
+        document.title = "Bestellungen";
     }, []);
 
 
@@ -165,7 +165,7 @@ function ListOrders() {
 
     return (
         <>
-            <Typography sx={{ fontWeight: "bold" }} variant="h4" gutterBottom> Bestellübersicht </Typography>
+            <Typography className={styles.title} variant="h4" gutterBottom> Bestellübersicht </Typography>
             <AddButton onClick={() => setIsOpen(true)} sxCustom={{marginBottom: 2}}/>
             <OrderTable orders={orders} onEdit={handleEditButtonClicked} onDelete={handleDeleteButtonClicked} />
 

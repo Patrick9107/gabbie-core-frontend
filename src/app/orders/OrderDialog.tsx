@@ -7,6 +7,7 @@ import { ChangeEvent } from "react";
 import dayjs, { Dayjs } from "dayjs";
 import {OrderSource} from "../../domain/enums/OrderSource.ts";
 import OrderItemsDialog from "./OrderItemsDialog.tsx";
+import styles from './Order.module.css';
 
 interface Props {
     open: boolean;
@@ -34,11 +35,11 @@ const OrderDialog = ({ open, edit, isProductDialogOpen, onProductDialogClose, or
             <DialogContent>
                 <TextField label="Telefonnummer" name="phoneNumber" value={order.phoneNumber} fullWidth margin="dense" onChange={onChange} />
                 <TextField label="Adresse" name="address" value={order.address} fullWidth margin="dense" onChange={onChange} />
-                <Box sx={{ display: "flex", gap: "8px", marginY: "4px" }}>
+                <Box className={styles.dateOrderSourceBox}>
                     <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="de">
                         <DatePicker label="Lieferdatum (optional)" value={order.deliveryDate ? dayjs(order.deliveryDate) : null} onChange={onDateChange} format="DD.MM.YYYY"/>
                     </LocalizationProvider>
-                    <Select value={selectedOrderSource ?? ""} onChange={(e) => onOrderSourceChange(Number(e.target.value))} displayEmpty fullWidth sx={{width: "50%"}}>
+                    <Select value={selectedOrderSource ?? ""} onChange={(e) => onOrderSourceChange(Number(e.target.value))} displayEmpty fullWidth sx={{width: "50%", minWidth: "200px"}}>
                         <MenuItem value="" disabled>Quelle auswählen</MenuItem>
                         {Object.entries(OrderSource)
                             .filter(([_key, value]) => !isNaN(Number(value)))

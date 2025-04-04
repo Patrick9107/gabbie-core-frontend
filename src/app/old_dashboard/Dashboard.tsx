@@ -1,11 +1,17 @@
-import { Grid, Paper, Box, Typography} from "@mui/material";
+import { Grid, Box} from "@mui/material";
 import Timesheet from "./Timesheet.tsx";
 import OrderStats from "./OrderStats.tsx";
 import OrderList from "./OrderList.tsx";
 import DailyRecords from "./DailyRecords.tsx";
 import DailyOrders from "./DailyOrders.tsx";
+import {useEffect} from "react";
 
 function Dashboard() {
+
+    useEffect(() => {
+        document.title = "Dashboard";
+    }, []);
+
     return (
         <Box sx={{ p: 3 }}>
             <Grid container spacing={3}>

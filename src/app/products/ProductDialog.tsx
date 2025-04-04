@@ -119,33 +119,36 @@ function ProductDialog({ open, edit, product, onClose, onSubmit, onChange, onCon
                 margin="dense"
                 onChange={onChange}
               />
-              <Box sx={{ display: "flex", gap: "8px", marginY: "4px" }}>
-                  <TextField
-                    label="Bild URL"
-                    name="imageUrl"
-                    value={product.imageUrl}
-                    fullWidth
-                    margin="dense"
-                    onChange={onChange}
-                  />
-                  <Select
-                    value={product.container === undefined ? "" : product.container?.id ?? "none"}
-                    displayEmpty
-                    fullWidth
-                    onChange={(e) =>
-                      onContainerChange(e.target.value === "none" ? null : Number(e.target.value))
-                    }
-                  >
-                      <MenuItem value="" disabled>
-                          Behälter auswählen
-                      </MenuItem>
-                      <MenuItem value="none">Keiner</MenuItem>
-                      {containers.map((container) => (
-                        <MenuItem key={container.id} value={container.id}>
-                            {container.type}
-                        </MenuItem>
-                      ))}
-                  </Select>
+              <Box sx={{ display: "flex", gap: "8px", mt: "8px", width: "100%" }}>
+                  <Box sx={{width: "50%"}}>
+                      <TextField
+                          label="Bild URL"
+                          name="imageUrl"
+                          value={product.imageUrl}
+                          fullWidth
+                          onChange={onChange}
+                      />
+                  </Box>
+                  <Box sx={{width: "50%"}}>
+                      <Select
+                        value={product.container === undefined ? "" : product.container?.id ?? "none"}
+                        displayEmpty
+                        fullWidth
+                        onChange={(e) =>
+                          onContainerChange(e.target.value === "none" ? null : Number(e.target.value))
+                        }
+                      >
+                          <MenuItem value="" disabled>
+                              Behälter auswählen
+                          </MenuItem>
+                          <MenuItem value="none">Keiner</MenuItem>
+                          {containers.map((container) => (
+                            <MenuItem key={container.id} value={container.id}>
+                                {container.type}
+                            </MenuItem>
+                          ))}
+                      </Select>
+                  </Box>
               </Box>
           </DialogContent>
           <DialogActions>

@@ -5,6 +5,7 @@ import { loginUser } from '../../infra/api/authService.ts';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import { useAuth } from './AuthProvider.tsx';
+import {useEffect} from "react";
 
 
 const LoginForm = () => {
@@ -27,6 +28,10 @@ const LoginForm = () => {
       navigate('/');
     },
   });
+
+  useEffect(() => {
+    document.title = "Login";
+  }, []);
 
   const handleSubmit = async (values: { username: string; password: string }) => {
     try {

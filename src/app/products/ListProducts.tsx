@@ -34,7 +34,8 @@ function ListProducts() {
     // Fetch products on mount
     useEffect(() => {
         fetchProducts().then(setProducts).catch(console.error);
-        fetchContainers().then(setContainers).catch(console.error)
+        fetchContainers().then(setContainers).catch(console.error);
+        document.title = "Produkte";
     }, []);
 
     const handleClose = () => {

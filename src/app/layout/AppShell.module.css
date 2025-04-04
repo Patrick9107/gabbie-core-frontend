@@ -1,9 +1,39 @@
-.a {
-    color: white;
+.appShellContainer {
+    display: flex;
 }
 
-.ul {
-    list-style-type: none;
+.drawer {
+    width: 240px;
+    flex-shrink: 0;
 }
 
-/* provisorische styles, kann man löschen @Marko*/
+.drawer .MuiDrawer-paper {
+    width: 240px;
+    box-sizing: border-box;
+}
+
+.toolbar {
+    display: flex;
+    justify-content: center;
+}
+
+.logo {
+    max-width: 200px;
+}
+
+.navItem {
+    transition: background-color 0.3s ease-in-out;
+}
+
+.navItem:hover {
+    background-color: #ccc;
+}
+
+.selected {
+    background-color: #ddd;
+}
+
+.mainContent {
+    flex-grow: 1;
+    padding: 24px;
+}

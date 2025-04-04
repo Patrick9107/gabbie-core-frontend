@@ -12,7 +12,8 @@ const defaultVehicle: Vehicle = {
     id: -1,
     licensePlate: "",
     capacity: 0,
-    status: VehicleStatus.Verfuegbar
+    status: VehicleStatus.Verfuegbar,
+    routeId: 0
 };
 
 function VehicleList() {
@@ -28,6 +29,7 @@ function VehicleList() {
         };
 
         loadVehicles();
+        document.title = "Fahrzeuge";
     }, []);
 
     const [vehicles, setVehicles] = useState<Vehicle[]>([]);
