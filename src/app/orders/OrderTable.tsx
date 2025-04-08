@@ -53,7 +53,13 @@ const OrderTable = ({ orders, onEdit, onDelete }: Props) => {
                 <Button
                     variant="contained"
                     sx={{ backgroundColor: "#3d9970", "&:hover": { backgroundColor: "#33805d" } }}
-                    onClick={() => setSelecting(!selecting)}
+                    onClick={() => {
+                        setSelecting(prev => {
+                            if (prev) setSelectedOrders([]);
+                            return !prev;
+                        });
+                    }}
+
                 >
                     {selecting ? "Auswahl beenden" : "Bestellungen auswählen"}
                 </Button>
