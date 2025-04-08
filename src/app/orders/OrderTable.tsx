@@ -4,11 +4,12 @@ import {
 import { KeyboardArrowDown, KeyboardArrowUp } from "@mui/icons-material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
-import { useState, Fragment } from "react";
+import { useState, Fragment, useEffect } from 'react';
 import { OrderStatus } from "../../domain/enums/OrderStatus.ts";
 import { OrderSource } from "../../domain/enums/OrderSource.ts";
 import { OrderResponse } from "../../domain/OrderResponse.ts";
 import { useNavigate } from "react-router-dom";
+import { Order } from '../../domain/Order.ts';
 
 interface Props {
     orders: OrderResponse[];
@@ -25,6 +26,7 @@ const OrderTable = ({ orders, onEdit, onDelete }: Props) => {
     const [openRows, setOpenRows] = useState(new Map<number, boolean>());
     const [selecting, setSelecting] = useState(false);
     const [selectedOrders, setSelectedOrders] = useState<number[]>([]);
+    const [uncompletedOrders, setUncompletedOrders] = useState<Order[]>([])
     const navigate = useNavigate();
 
     const toggleRow = (id: number) => {
@@ -46,6 +48,14 @@ const OrderTable = ({ orders, onEdit, onDelete }: Props) => {
         const selectedOrdersData = orders.filter(order => selectedOrders.includes(order.id));
         navigate(`/routes`, { state: { orders: selectedOrdersData } });
     };
+
+    useEffect(() => {
+        const result = orders.filter(o =>
+          !o.phoneNumber || !o.address || o.orderItems.length === 0
+        );
+
+        setUncompletedOrders(result);
+    }, [orders]);
 
     return (
         <Paper sx={{ overflow: "hidden", borderRadius: "12px", boxShadow: 3, p: 2 }}>
@@ -90,7 +100,14 @@ const OrderTable = ({ orders, onEdit, onDelete }: Props) => {
                     {orders.map(order => (
                         <Fragment key={order.id}>
                             <TableRow
-                                sx={{ backgroundColor: selectedOrders.includes(order.id) ? "#d5f5e3" : "inherit", cursor: "pointer" }}
+                              sx={{
+                                  backgroundColor: selectedOrders.includes(order.id)
+                                    ? "#d5f5e3"
+                                    : uncompletedOrders.some(o => o.id === order.id)
+                                      ? "#ffdddd"
+                                      : "inherit",
+                                  cursor: "pointer"
+                              }}
                             >
                                 <TableCell>
                                     {selecting ? (
