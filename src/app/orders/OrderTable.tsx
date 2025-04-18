@@ -1,7 +1,20 @@
 import {
-    Table, TableBody, TableCell, TableHead, TableRow, IconButton, Collapse, Box, Button, Paper, Typography, Checkbox
-} from "@mui/material";
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableRow,
+    IconButton,
+    Collapse,
+    Box,
+    Button,
+    Paper,
+    Typography,
+    Checkbox,
+    MenuItem, Menu,
+} from '@mui/material';
 import { KeyboardArrowDown, KeyboardArrowUp } from "@mui/icons-material";
+import FilterListIcon from "@mui/icons-material/FilterList";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import { useState, Fragment, useEffect } from 'react';
@@ -26,8 +39,40 @@ const OrderTable = ({ orders, onEdit, onDelete }: Props) => {
     const [openRows, setOpenRows] = useState(new Map<number, boolean>());
     const [selecting, setSelecting] = useState(false);
     const [selectedOrders, setSelectedOrders] = useState<number[]>([]);
-    const [uncompletedOrders, setUncompletedOrders] = useState<Order[]>([])
+    const [uncompletedOrders, setUncompletedOrders] = useState<Order[]>([]);
     const navigate = useNavigate();
+
+
+    const [sortOptions, setSortOptions] = useState<{ key: "date" | "price"; asc: boolean } | null>(null);
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const open = Boolean(anchorEl);
+
+    const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+
+    const sortedOrders = [...orders];
+    if (sortOptions) {
+      sortedOrders.sort((a, b) => {
+        const getValue = (key: "date" | "price", order: OrderResponse) => {
+          switch (key) {
+            case "date":
+              { const time = new Date(order.deliveryDate || "").getTime();
+              return isNaN(time) ? (sortOptions!.asc ? Infinity : -Infinity) : time; }
+            case "price":
+              return order.totalAmount;
+          }
+        };
+
+        const aValue = getValue(sortOptions.key, a);
+        const bValue = getValue(sortOptions.key, b);
+        return sortOptions.asc ? aValue - bValue : bValue - aValue;
+      });
+    }
 
     const toggleRow = (id: number) => {
         if (selecting) return; // Verhindert das Aufklappen während der Auswahl
@@ -51,7 +96,7 @@ const OrderTable = ({ orders, onEdit, onDelete }: Props) => {
 
     useEffect(() => {
         const result = orders.filter(o =>
-          !o.phoneNumber || !o.address || o.orderItems.length === 0
+          !o.phoneNumber || !o.address || o.orderItems.length === 0 || !o.deliveryDate
         );
 
         setUncompletedOrders(result);
@@ -94,10 +139,29 @@ const OrderTable = ({ orders, onEdit, onDelete }: Props) => {
                         <TableCell>Preis</TableCell>
                         <TableCell>Aktueller Liefertermin</TableCell>
                         <TableCell>Aktionen</TableCell>
+                        <TableCell>
+                          <Box sx={{ position: "relative" }}>
+                            <IconButton size="small" onClick={handleClick}>
+                              <FilterListIcon sx={{ color: "white" }} />
+                            </IconButton>
+                            <Menu
+                              anchorEl={anchorEl}
+                              open={open}
+                              onClose={handleClose}
+                              anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                              transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+                            >
+                              <MenuItem onClick={() => { setSortOptions({ key: "date", asc: true }); handleClose(); }}>Datum ↑</MenuItem>
+                              <MenuItem onClick={() => { setSortOptions({ key: "date", asc: false }); handleClose(); }}>Datum ↓</MenuItem>
+                              <MenuItem onClick={() => { setSortOptions({ key: "price", asc: true }); handleClose(); }}>Preis ↑</MenuItem>
+                              <MenuItem onClick={() => { setSortOptions({ key: "price", asc: false }); handleClose(); }}>Preis ↓</MenuItem>
+                            </Menu>
+                          </Box>
+                        </TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {orders.map(order => (
+                {sortedOrders.map(order => (
                         <Fragment key={order.id}>
                             <TableRow
                               sx={{
