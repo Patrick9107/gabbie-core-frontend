@@ -40,8 +40,8 @@ const OrderTable = ({ orders, onEdit, onDelete }: Props) => {
     const [selecting, setSelecting] = useState(false);
     const [selectedOrders, setSelectedOrders] = useState<number[]>([]);
     const [uncompletedOrders, setUncompletedOrders] = useState<Order[]>([]);
+    const [filterDate, setFilterDate] = useState<string>("");
     const navigate = useNavigate();
-
 
     const [sortOptions, setSortOptions] = useState<{ key: "date" | "price"; asc: boolean } | null>(null);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -55,7 +55,22 @@ const OrderTable = ({ orders, onEdit, onDelete }: Props) => {
         setAnchorEl(null);
     };
 
-    const sortedOrders = [...orders];
+  const filteredOrders = filterDate
+    ? orders.filter(order => {
+      if (!order.deliveryDate) return false;
+
+      const delivery = new Date(order.deliveryDate);
+      const [year, month, day] = filterDate.split("-"); // yyyy-mm-dd
+
+      return (
+        delivery.getFullYear() === parseInt(year) &&
+        delivery.getMonth() + 1 === parseInt(month) && // getMonth is 0-based
+        delivery.getDate() === parseInt(day)
+      );
+    })
+    : orders;
+
+    const sortedOrders = [...filteredOrders];
     if (sortOptions) {
       sortedOrders.sort((a, b) => {
         const getValue = (key: "date" | "price", order: OrderResponse) => {
@@ -104,30 +119,37 @@ const OrderTable = ({ orders, onEdit, onDelete }: Props) => {
 
     return (
         <Paper sx={{ overflow: "hidden", borderRadius: "12px", boxShadow: 3, p: 2 }}>
-            <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-                <Button
-                    variant="contained"
-                    sx={{ backgroundColor: "#3d9970", "&:hover": { backgroundColor: "#33805d" } }}
-                    onClick={() => {
-                        setSelecting(prev => {
-                            if (prev) setSelectedOrders([]);
-                            return !prev;
-                        });
-                    }}
-
-                >
-                    {selecting ? "Auswahl beenden" : "Bestellungen auswählen"}
-                </Button>
-                {selecting && (
+            <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2, alignItems: "center" }}>
+                <Box sx={{ display: "flex", gap: 2 }}>
                     <Button
                         variant="contained"
                         sx={{ backgroundColor: "#3d9970", "&:hover": { backgroundColor: "#33805d" } }}
-                        onClick={handleRouteCalculation}
-                        disabled={selectedOrders.length === 0}
+                        onClick={() => {
+                            setSelecting(prev => {
+                                if (prev) setSelectedOrders([]);
+                                return !prev;
+                            });
+                        }}
                     >
-                        Route berechnen
+                        {selecting ? "Auswahl beenden" : "Bestellungen auswählen"}
                     </Button>
-                )}
+                    {selecting && (
+                        <Button
+                            variant="contained"
+                            sx={{ backgroundColor: "#3d9970", "&:hover": { backgroundColor: "#33805d" } }}
+                            onClick={handleRouteCalculation}
+                            disabled={selectedOrders.length === 0}
+                        >
+                            Route berechnen
+                        </Button>
+                    )}
+                </Box>
+                <input
+                    type="date"
+                    value={filterDate}
+                    onChange={(e) => setFilterDate(e.target.value)}
+                    style={{ border: "1px solid #ccc", padding: "6px 12px", borderRadius: "4px", font: "inherit" }}
+                />
             </Box>
 
             <Table sx={{ minWidth: 650 }}>
@@ -201,6 +223,9 @@ const OrderTable = ({ orders, onEdit, onDelete }: Props) => {
                                         <DeleteIcon />
                                     </IconButton>
                                 </TableCell>
+                              <TableCell>
+                              {/*  Leer halten !!!!!!!!!*/}
+                              </TableCell>
                             </TableRow>
 
                             {!selecting && (
