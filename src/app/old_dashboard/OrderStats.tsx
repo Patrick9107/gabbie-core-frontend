@@ -1,58 +1,30 @@
 import { useEffect, useState } from "react";
 import { Paper, Typography, Box, LinearProgress } from "@mui/material";
-import { Product } from "../../domain/Product.ts";
+import { fetchOrderedProductStats } from "../../infra/api/productService"; // ← Pfad ggf. anpassen
 
 function OrderStats() {
-    const [products, setProducts] = useState<Product[]>([]);
     const [orderStats, setOrderStats] = useState<{ label: string; count: number }[]>([]);
+    const MAX_COUNT = 2500;
 
     useEffect(() => {
-        async function fetchProducts() {
+        async function loadStats() {
             try {
-                const res = await fetch("/api/products");
-                if (!res.ok) throw new Error("Fehler beim Abrufen der Produkte");
-                const data: Product[] = await res.json();
-                console.log("Produkte geladen:", data);
-                setProducts(data);
+                const data = await fetchOrderedProductStats(); // ← Axios-Call aus dem Service
+                const stats = data
+                    .map(entry => ({
+                        label: entry.productName,
+                        count: entry.count,
+                    }))
+                    .sort((a, b) => b.count - a.count)
+                    .slice(0, 6); // Top 6 Produkte
+                setOrderStats(stats);
             } catch (error) {
-                console.error(error);
+                console.error("Fehler beim Laden der Bestellstatistiken:", error);
             }
         }
 
-        fetchProducts();
+        loadStats();
     }, []);
-
-    useEffect(() => {
-        if (products.length === 0) return;
-
-        async function fetchOrders() {
-            try {
-                const res = await fetch("/api/orders");
-                if (!res.ok) throw new Error("Fehler beim Abrufen der Bestellungen");
-                const data = await res.json();
-
-                const orderCount: Record<string, number> = {};
-
-                data.forEach((order: { items: { productId: string; quantity: number }[] }) => {
-                    order.items.forEach((item) => {
-                        orderCount[item.productId] = (orderCount[item.productId] || 0) + item.quantity;
-                    });
-                });
-
-                const stats = Object.entries(orderCount).map(([productId, count]) => {
-                    const product = products.find((p) => p.id === productId);
-                    return { label: product?.name ?? "Unbekannt", count };
-                });
-
-                stats.sort((a, b) => b.count - a.count);
-                setOrderStats(stats.length <= 6 ? stats : stats.slice(0, 6));
-            } catch (error) {
-                console.error(error);
-            }
-        }
-
-        fetchOrders();
-    }, [products]);
 
     return (
         <Paper sx={{ p: 2 }}>
@@ -60,10 +32,10 @@ function OrderStats() {
             {orderStats.length > 0 ? (
                 orderStats.map((product, index) => (
                     <Box key={index} sx={{ mt: 2 }}>
-                        <Typography variant="body2">{`${product.label} (${String(product.count)})`}</Typography>
+                        <Typography variant="body2">{`${product.label} (${product.count}/${MAX_COUNT})`}</Typography>
                         <LinearProgress
                             variant="determinate"
-                            value={Math.min((product.count / orderStats[0].count) * 100, 100)}
+                            value={(product.count / MAX_COUNT) * 100}
                             sx={{
                                 height: 10,
                                 borderRadius: 5,
