@@ -3,6 +3,7 @@ import { Box, Drawer, CssBaseline, Toolbar, List, Divider, ListItem, ListItemBut
 import { Dashboard as DashboardIcon, LocalMall as LocalMallIcon, LocalShipping as LocalShippingIcon, History as HistoryIcon, ExitToApp as ExitToAppIcon, InventoryOutlined as InventoryOutlinedIcon, AddLocationAlt } from '@mui/icons-material';
 import { Outlet, useNavigate } from 'react-router-dom';
 import styles from './AppShell.module.css';
+import TakeoutDiningIcon from '@mui/icons-material/TakeoutDining';
 
 
 function AppShell() {
@@ -36,6 +37,7 @@ function AppShell() {
     { text: 'Dashboard', link: '/', icon: <DashboardIcon /> },
     { text: 'Bestellungsübersicht', link: '/bestellungen', icon: <LocalMallIcon /> },
     { text: 'Produkte', link: '/produkte', icon: <InventoryOutlinedIcon /> },
+    { text: 'Behälter', link: '/behaelter', icon: <TakeoutDiningIcon />},
     { text: 'Routenplanung', link: '/routes', icon: <AddLocationAlt /> },
     { text: 'Fahrzeuge', link: '/fahrzeuge', icon: <LocalShippingIcon /> },
     { text: 'Vorherige Routen', link: '/history', icon: <HistoryIcon /> },
