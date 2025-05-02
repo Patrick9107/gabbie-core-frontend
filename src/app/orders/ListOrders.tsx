@@ -12,6 +12,7 @@ import {OrderItem} from "../../domain/OrderItem.ts";
 import {fetchProducts} from "../../infra/api/productService.ts";
 import * as console from "node:console";
 import styles from './Order.module.css';
+import OrderOverview from './OrderOverview.tsx';
 
 
 const defaultOrder: OrderResponse = {
@@ -165,6 +166,7 @@ function ListOrders() {
 
     return (
         <>
+            <OrderOverview orders={orders} sxCustom={{marginBottom: 2}}></OrderOverview>
             <Typography className={styles.title} variant="h4" gutterBottom> Bestellübersicht </Typography>
             <AddButton onClick={() => setIsOpen(true)} sxCustom={{marginBottom: 2}}/>
             <OrderTable orders={orders} onEdit={handleEditButtonClicked} onDelete={handleDeleteButtonClicked} />
