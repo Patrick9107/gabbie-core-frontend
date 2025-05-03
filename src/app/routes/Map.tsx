@@ -17,13 +17,14 @@ const MapComponent = ({ routeData }: { routeData: any }) => {
 
     useEffect(() => {
         if (!routeData || !window.google) return;
+        if (!reloadMap) return; // Nur reloaden, wenn reloadMap TRUE ist
 
         const directionsService = new google.maps.DirectionsService();
-        
         const { destination, waypoints } = routeData;
+
         directionsService.route(
             {
-                origin: fixedOrigin,  
+                origin: fixedOrigin,
                 destination,
                 waypoints: waypoints.map((wp: { location: string }) => ({ location: wp.location, stopover: true })),
                 travelMode: google.maps.TravelMode.DRIVING,
@@ -36,7 +37,8 @@ const MapComponent = ({ routeData }: { routeData: any }) => {
                 }
             }
         );
-    }, [routeData, reloadMap]);  
+    }, [reloadMap]);
+
 
     useEffect(() => {
         const watchId = navigator.geolocation.watchPosition(
@@ -68,7 +70,7 @@ const MapComponent = ({ routeData }: { routeData: any }) => {
     };
 
     const handleReloadMap = () => {
-        setReloadMap(!reloadMap);  
+        setReloadMap(true);  
     };
 
     return (

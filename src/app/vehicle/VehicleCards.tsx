@@ -3,7 +3,6 @@ import { Button, Card, CardContent, CardHeader, CardMedia, Box } from "@mui/mate
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { Vehicle } from "../../domain/Vehicle.ts";
-import AssignRouteDialog from "../vehicle/VehicleAssignRoute.tsx";
 import AddressDialog from "../vehicle/VehicleAddressDialog.tsx";
 
 interface Props {
@@ -60,7 +59,6 @@ function VehicleCards({ vehicles, onDelete, onEdit }: Props) {
                             <Button onClick={() => onDelete(vehicle.id)} variant="contained" color="error" startIcon={<DeleteIcon />} sx={{ fontSize: "0.8rem" }}>
                                 Löschen
                             </Button>
-                            <AssignRouteDialog vehicleId={vehicle.id} licensePlate={vehicle.licensePlate} capacity={vehicle.capacity} status={vehicle.status} />
                             {vehicle.routeId > 0 && (
                                 <Button
                                     variant="contained"

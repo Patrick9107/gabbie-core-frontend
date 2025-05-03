@@ -1,7 +1,9 @@
 ﻿import { useState, useEffect } from "react";
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from "@mui/material";
-import AddressList from "../routes/AddressList.tsx";
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Box } from "@mui/material";
+import AddressList from "./HistoryList.tsx";
 import { API_BASE_URL } from "../../../apiConfig";
+import ExportToExcelButton from "./ExportToExcelButton";
+import ExportLadelisteButton from "./LadelisteExport";
 
 interface Props {
     open: boolean;
@@ -11,6 +13,7 @@ interface Props {
 
 function AddressDialog({ open, onClose, routeId }: Props) {
     const [stops, setStops] = useState<any[]>([]);
+    const [routeData, setRouteData] = useState<string>("");
 
     useEffect(() => {
         const fetchRouteData = async () => {
@@ -22,6 +25,7 @@ function AddressDialog({ open, onClose, routeId }: Props) {
 
                 const route = await response.json();
                 if (route?.routeData) {
+                    setRouteData(route.routeData); // Zum Exportieren speichern
                     try {
                         const parsedData = JSON.parse(route.routeData);
                         setStops(parsedData.rawStops || []);
@@ -41,7 +45,6 @@ function AddressDialog({ open, onClose, routeId }: Props) {
         }
     }, [open, routeId]);
 
-    // Prevent rendering dialog if routeId is invalid (0 or undefined)
     if (!routeId || routeId === 0) return null;
 
     return (
@@ -61,19 +64,19 @@ function AddressDialog({ open, onClose, routeId }: Props) {
                 ) : (
                     <>
                         {stops.length > 0 ? (
-                            <AddressList
-                                stops={stops}
-                                handleStatusChange={() => {}}
-                                handleExportToGoogleMaps={() => {}}
-                            />
+                            <AddressList stops={stops} routeId={routeId} />
                         ) : (
                             <p>Keine Adressen verfügbar</p>
                         )}
                     </>
                 )}
             </DialogContent>
-            <DialogActions>
-                <Button onClick={onClose} color="primary">Schließen</Button>
+            <DialogActions sx={{ display: "flex", justifyContent: "space-between", px: 3 }}>
+                <Box sx={{ display: "flex", gap: 1 }}>
+                    {routeData && <ExportLadelisteButton routeData={routeData} />}
+                    {routeData && <ExportToExcelButton routeData={routeData} />}
+                </Box>
+                <Button onClick={onClose} color="success">Schließen</Button>
             </DialogActions>
         </Dialog>
     );

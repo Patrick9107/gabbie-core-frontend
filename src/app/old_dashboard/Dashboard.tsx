@@ -4,6 +4,7 @@ import OrderStats from "./OrderStats.tsx";
 import OrderList from "./OrderList.tsx";
 import DailyRecords from "./DailyRecords.tsx";
 import DailyOrders from "./DailyOrders.tsx";
+import VehicleContainer from "./VehicleContainer.tsx"; // Importiere das VehiclePanelList-Komponent
 import {useEffect} from "react";
 
 function Dashboard() {
@@ -29,6 +30,9 @@ function Dashboard() {
                 </Grid>
                 <Grid item xs={12}>
                     <DailyRecords />
+                </Grid>
+                <Grid item xs={12} md={6} lg={4}>
+                    <VehicleContainer />
                 </Grid>
             </Grid>
         </Box>
