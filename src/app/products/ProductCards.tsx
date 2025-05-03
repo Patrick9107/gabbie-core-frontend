@@ -16,6 +16,7 @@ function ProductCards({ products, onDelete, onEdit }: Props) {
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
                 {products.map((product) => (
                     <ProductCard
+                        key={product.id}
                         product={product}
                         onDelete={onDelete}
                         onEdit={onEdit}

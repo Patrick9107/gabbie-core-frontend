@@ -1,14 +1,28 @@
 import {
-    Table, TableBody, TableCell, TableHead, TableRow, IconButton, Collapse, Box, Button, Paper, Typography, Checkbox
-} from "@mui/material";
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableRow,
+    IconButton,
+    Collapse,
+    Box,
+    Button,
+    Paper,
+    Typography,
+    Checkbox,
+    MenuItem, Menu,
+} from '@mui/material';
 import { KeyboardArrowDown, KeyboardArrowUp } from "@mui/icons-material";
+import FilterListIcon from "@mui/icons-material/FilterList";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
-import { useState, Fragment } from "react";
+import { useState, Fragment, useEffect } from 'react';
 import { OrderStatus } from "../../domain/enums/OrderStatus.ts";
 import { OrderSource } from "../../domain/enums/OrderSource.ts";
 import { OrderResponse } from "../../domain/OrderResponse.ts";
 import { useNavigate } from "react-router-dom";
+import { Order } from '../../domain/Order.ts';
 
 interface Props {
     orders: OrderResponse[];
@@ -25,7 +39,55 @@ const OrderTable = ({ orders, onEdit, onDelete }: Props) => {
     const [openRows, setOpenRows] = useState(new Map<number, boolean>());
     const [selecting, setSelecting] = useState(false);
     const [selectedOrders, setSelectedOrders] = useState<number[]>([]);
+    const [uncompletedOrders, setUncompletedOrders] = useState<Order[]>([]);
+    const [filterDate, setFilterDate] = useState<string>("");
     const navigate = useNavigate();
+
+    const [sortOptions, setSortOptions] = useState<{ key: "date" | "price"; asc: boolean } | null>(null);
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const open = Boolean(anchorEl);
+
+    const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+
+  const filteredOrders = filterDate
+    ? orders.filter(order => {
+      if (!order.deliveryDate) return false;
+
+      const delivery = new Date(order.deliveryDate);
+      const [year, month, day] = filterDate.split("-"); // yyyy-mm-dd
+
+      return (
+        delivery.getFullYear() === parseInt(year) &&
+        delivery.getMonth() + 1 === parseInt(month) && // getMonth is 0-based
+        delivery.getDate() === parseInt(day)
+      );
+    })
+    : orders;
+
+    const sortedOrders = [...filteredOrders];
+    if (sortOptions) {
+      sortedOrders.sort((a, b) => {
+        const getValue = (key: "date" | "price", order: OrderResponse) => {
+          switch (key) {
+            case "date":
+              { const time = new Date(order.deliveryDate || "").getTime();
+              return isNaN(time) ? (sortOptions!.asc ? Infinity : -Infinity) : time; }
+            case "price":
+              return order.totalAmount;
+          }
+        };
+
+        const aValue = getValue(sortOptions.key, a);
+        const bValue = getValue(sortOptions.key, b);
+        return sortOptions.asc ? aValue - bValue : bValue - aValue;
+      });
+    }
 
     const toggleRow = (id: number) => {
         if (selecting) return; // Verhindert das Aufklappen während der Auswahl
@@ -47,26 +109,47 @@ const OrderTable = ({ orders, onEdit, onDelete }: Props) => {
         navigate(`/routes`, { state: { orders: selectedOrdersData } });
     };
 
+    useEffect(() => {
+        const result = orders.filter(o =>
+          !o.phoneNumber || !o.address || o.orderItems.length === 0 || !o.deliveryDate
+        );
+
+        setUncompletedOrders(result);
+    }, [orders]);
+
     return (
         <Paper sx={{ overflow: "hidden", borderRadius: "12px", boxShadow: 3, p: 2 }}>
-            <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-                <Button
-                    variant="contained"
-                    sx={{ backgroundColor: "#3d9970", "&:hover": { backgroundColor: "#33805d" } }}
-                    onClick={() => setSelecting(!selecting)}
-                >
-                    {selecting ? "Auswahl beenden" : "Bestellungen auswählen"}
-                </Button>
-                {selecting && (
+            <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2, alignItems: "center" }}>
+                <Box sx={{ display: "flex", gap: 2 }}>
                     <Button
                         variant="contained"
                         sx={{ backgroundColor: "#3d9970", "&:hover": { backgroundColor: "#33805d" } }}
-                        onClick={handleRouteCalculation}
-                        disabled={selectedOrders.length === 0}
+                        onClick={() => {
+                            setSelecting(prev => {
+                                if (prev) setSelectedOrders([]);
+                                return !prev;
+                            });
+                        }}
                     >
-                        Route berechnen
+                        {selecting ? "Auswahl beenden" : "Bestellungen auswählen"}
                     </Button>
-                )}
+                    {selecting && (
+                        <Button
+                            variant="contained"
+                            sx={{ backgroundColor: "#3d9970", "&:hover": { backgroundColor: "#33805d" } }}
+                            onClick={handleRouteCalculation}
+                            disabled={selectedOrders.length === 0}
+                        >
+                            Route berechnen
+                        </Button>
+                    )}
+                </Box>
+                <input
+                    type="date"
+                    value={filterDate}
+                    onChange={(e) => setFilterDate(e.target.value)}
+                    style={{ border: "1px solid #ccc", padding: "6px 12px", borderRadius: "4px", font: "inherit" }}
+                />
             </Box>
 
             <Table sx={{ minWidth: 650 }}>
@@ -78,13 +161,39 @@ const OrderTable = ({ orders, onEdit, onDelete }: Props) => {
                         <TableCell>Preis</TableCell>
                         <TableCell>Aktueller Liefertermin</TableCell>
                         <TableCell>Aktionen</TableCell>
+                        <TableCell>
+                          <Box sx={{ position: "relative" }}>
+                            <IconButton size="small" onClick={handleClick}>
+                              <FilterListIcon sx={{ color: "white" }} />
+                            </IconButton>
+                            <Menu
+                              anchorEl={anchorEl}
+                              open={open}
+                              onClose={handleClose}
+                              anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                              transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+                            >
+                              <MenuItem onClick={() => { setSortOptions({ key: "date", asc: true }); handleClose(); }}>Datum ↑</MenuItem>
+                              <MenuItem onClick={() => { setSortOptions({ key: "date", asc: false }); handleClose(); }}>Datum ↓</MenuItem>
+                              <MenuItem onClick={() => { setSortOptions({ key: "price", asc: true }); handleClose(); }}>Preis ↑</MenuItem>
+                              <MenuItem onClick={() => { setSortOptions({ key: "price", asc: false }); handleClose(); }}>Preis ↓</MenuItem>
+                            </Menu>
+                          </Box>
+                        </TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {orders.map(order => (
+                {sortedOrders.map(order => (
                         <Fragment key={order.id}>
                             <TableRow
-                                sx={{ backgroundColor: selectedOrders.includes(order.id) ? "#d5f5e3" : "inherit", cursor: "pointer" }}
+                              sx={{
+                                  backgroundColor: selectedOrders.includes(order.id)
+                                    ? "#d5f5e3"
+                                    : uncompletedOrders.some(o => o.id === order.id)
+                                      ? "#ffdddd"
+                                      : "inherit",
+                                  cursor: "pointer"
+                              }}
                             >
                                 <TableCell>
                                     {selecting ? (
@@ -114,6 +223,9 @@ const OrderTable = ({ orders, onEdit, onDelete }: Props) => {
                                         <DeleteIcon />
                                     </IconButton>
                                 </TableCell>
+                              <TableCell>
+                              {/*  Leer halten !!!!!!!!!*/}
+                              </TableCell>
                             </TableRow>
 
                             {!selecting && (

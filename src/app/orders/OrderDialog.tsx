@@ -37,7 +37,7 @@ const OrderDialog = ({ open, edit, isProductDialogOpen, onProductDialogClose, or
                 <TextField label="Adresse" name="address" value={order.address} fullWidth margin="dense" onChange={onChange} />
                 <Box className={styles.dateOrderSourceBox}>
                     <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="de">
-                        <DatePicker label="Lieferdatum (optional)" value={order.deliveryDate ? dayjs(order.deliveryDate) : null} onChange={onDateChange} format="DD.MM.YYYY"/>
+                        <DatePicker label="Lieferdatum" value={order.deliveryDate ? dayjs(order.deliveryDate) : null} onChange={onDateChange} format="DD.MM.YYYY"/>
                     </LocalizationProvider>
                     <Select value={selectedOrderSource ?? ""} onChange={(e) => onOrderSourceChange(Number(e.target.value))} displayEmpty fullWidth sx={{width: "50%", minWidth: "200px"}}>
                         <MenuItem value="" disabled>Quelle auswählen</MenuItem>

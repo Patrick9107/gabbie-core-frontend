@@ -60,6 +60,21 @@ export const deleteProduct = async (id: number): Promise<void> => {
   }
 };
 
+export const fetchOrderedProductStats = async (): Promise<{ productId: number; productName: string; count: number }[]> => {
+  try {
+    const response = await axios.get(`${PRODUCTS_URL}/order-counts`);
+    return response.data;
+  } catch (error) {
+    throw new Error(
+        `Error fetching ordered product stats: ${
+            axios.isAxiosError(error)
+                ? error.response?.data?.message || error.message
+                : String(error)
+        }`
+    );
+  }
+};
+
 const handleError = (error: unknown): never => {
   if (axios.isAxiosError(error)) {
     const status = error.response?.status ?? 'Unknown';

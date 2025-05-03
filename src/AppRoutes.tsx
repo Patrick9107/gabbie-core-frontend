@@ -12,6 +12,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import HistoryPage from "./app/history/HistoryPage.tsx";
 import Box from '@mui/material/Box';
 import { useAuth } from './app/login/AuthProvider';
+import ListContainers from "./app/containers/ListContainers.tsx";
 
 function RequireAuth({ children }: { children: JSX.Element }) {
   const { isTokenValid, role } = useAuth();
@@ -47,6 +48,7 @@ function AppRoutes() {
           <Route path="/" element={<RequireAuth><Dashboard /></RequireAuth>} />
           <Route path="/bestellungen" element={<RequireAuth><ListOrders /></RequireAuth>} />
           <Route path="/produkte" element={<RequireAuth><ListProducts /></RequireAuth>} />
+          <Route path="/behaelter" element={<RequireAuth><ListContainers /></RequireAuth>} />
           <Route path="/fahrzeuge" element={<RequireAuth><VehicleList /></RequireAuth>} />
           <Route path="/routes" element={<RequireAuth><RoutesPage /></RequireAuth>}  />
           <Route path="/history" element={<RequireAuth><HistoryPage /></RequireAuth>}  />
