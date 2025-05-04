@@ -1,32 +1,48 @@
-import { Button, TextField, Typography, CircularProgress, Box } from '@mui/material';
+import { Button, TextField, Typography, CircularProgress, Box, Paper, Alert } from '@mui/material';
+import LockOpenIcon from '@mui/icons-material/LockOpen'; // Importiert ein passendes Icon
 import { Formik } from 'formik';
 import { useMutation } from '@tanstack/react-query';
 import { loginUser } from '../../infra/api/authService.ts';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import { useAuth } from './AuthProvider.tsx';
-import {useEffect} from "react";
+import { useEffect } from "react";
 
+interface DecodedToken {
+  "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
+  "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name": string;
+  [key: string]: any;
+}
 
 const LoginForm = () => {
   const navigate = useNavigate();
-  const { setIsTokenValid, setRole } = useAuth(); // Access set function from context
+  const { setIsTokenValid, setRole } = useAuth();
 
   const { mutateAsync, status, error, isError } = useMutation({
     mutationFn: loginUser,
     onSuccess: (data: { token: string }) => {
       localStorage.setItem('authToken', data.token);
 
-      const decodedToken = JSON.parse(JSON.stringify(jwtDecode(data.token)));
-      const role = decodedToken["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
-      const name = decodedToken["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"];
-      
-      localStorage.setItem('role', role);
-      localStorage.setItem('name', name);
-      setRole(role);
-      setIsTokenValid(true); // Set the token validity to true
-      navigate('/');
+      try {
+        const decodedToken = jwtDecode<DecodedToken>(data.token);
+        const userRole = decodedToken["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
+        const userName = decodedToken["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"];
+
+        localStorage.setItem('role', userRole);
+        localStorage.setItem('name', userName);
+        setRole(userRole);
+        setIsTokenValid(true);
+        navigate('/');
+      } catch (decodeError) {
+        console.error('Fehler beim Dekodieren des Tokens:', decodeError);
+        localStorage.clear();
+        setIsTokenValid(false);
+        setRole('');
+      }
     },
+    onError: (err) => {
+      console.error('Login-Fehler:', err);
+    }
   });
 
   useEffect(() => {
@@ -34,107 +50,123 @@ const LoginForm = () => {
   }, []);
 
   const handleSubmit = async (values: { username: string; password: string }) => {
-    try {
-      await mutateAsync(values);
-    } catch (err) {
-      console.error('Fehler beim Absenden des Formulars:', err);
-    }
+    await mutateAsync(values);
   };
 
   return (
-    <Box
-      display="flex"
-      justifyContent="center"
-      alignItems="center"
-      height="100vh"
-      bgcolor="white"
-      p={3}
-    >
       <Box
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        bgcolor="white"
-        p={4}
-        borderRadius="8px"
-        boxShadow={3}
-        width="100%"
-        maxWidth="400px"
-      >
-        <Typography variant="h5" gutterBottom>
-          Logge dich in dein Konto ein
-        </Typography>
-        <Formik
-          initialValues={{ username: '', password: '' }}
-          validate={(values) => {
-            const errors: { username?: string; password?: string } = {};
-            if (!values.username) {
-              errors.username = 'Benutzername erforderlich';
-            }
-            if (!values.password) {
-              errors.password = 'Passwort erforderlich';
-            }
-            return errors;
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          minHeight="100vh"
+          sx={{
+            background: 'linear-gradient(to bottom, #e8f5e9, #ffffff)',
           }}
-          onSubmit={handleSubmit}
+          p={2}
+      >
+        <Paper
+            elevation={6}
+            sx={{
+              p: { xs: 3, sm: 4 },
+              borderRadius: '12px',
+              width: '100%',
+              maxWidth: '420px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+            }}
         >
-          {({ values, handleChange, handleSubmit, errors, touched }) => (
-            <form onSubmit={handleSubmit} style={{ width: '100%' }}>
-              <Box mb={2}>
-                <TextField
-                  fullWidth
-                  label="Benutzername"
-                  name="username"
-                  value={values.username}
-                  onChange={handleChange}
-                  error={touched.username && Boolean(errors.username)}
-                  helperText={touched.username && errors.username}
-                  variant="outlined"
-                  size="small"
-                />
-              </Box>
-              <Box mb={2}>
-                <TextField
-                  fullWidth
-                  label="Passwort"
-                  name="password"
-                  type="password"
-                  value={values.password}
-                  onChange={handleChange}
-                  error={touched.password && Boolean(errors.password)}
-                  helperText={touched.password && errors.password}
-                  variant="outlined"
-                  size="small"
-                />
-              </Box>
-              {isError && (
-                <Box mb={2}>
-                  <Typography variant="body2" color="error" align="center">
-                    {error?.message}
-                  </Typography>
-                </Box>
-              )}
-              <Box mb={2}>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  fullWidth
-                  disabled={status === 'pending'} // Button deaktivieren, wenn die Mutation läuft
-                  size="large"
-                  sx={{ padding: '12px 0',  bgcolor: "#235817" }}
-                >
-                  {status === 'pending' ? (
-                    <CircularProgress size={24} color="inherit" />
-                  ) : (
-                    'Anmelden'
+           <img src="/logo-icon.svg" alt="GABBIE Logo" style={{ marginBottom: '16px', height: '50px' }} />
+
+          <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'medium' }}>
+            Anmelden
+          </Typography>
+          <Typography variant="body1" color="textSecondary" sx={{ mb: 4, textAlign: 'center' }}>
+            Willkommen zurück! Bitte gib deine Daten ein.
+          </Typography>
+
+          <Formik
+              initialValues={{ username: '', password: '' }}
+              validate={(values) => {
+                const errors: { username?: string; password?: string } = {};
+                if (!values.username.trim()) {
+                  errors.username = 'Benutzername erforderlich';
+                }
+                if (!values.password) {
+                  errors.password = 'Passwort erforderlich';
+                }
+                return errors;
+              }}
+              onSubmit={handleSubmit}
+          >
+            {({ values, handleChange, handleBlur, handleSubmit: formikSubmit, errors, touched }) => (
+                <Box component="form" onSubmit={formikSubmit} sx={{ width: '100%', mt: 1 }}>
+                  <TextField
+                      margin="normal"
+                      required
+                      fullWidth
+                      id="username"
+                      label="Benutzername"
+                      name="username"
+                      autoComplete="username"
+                      autoFocus
+                      value={values.username}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      error={touched.username && Boolean(errors.username)}
+                      helperText={touched.username && errors.username}
+                      variant="filled"
+                  />
+                  <TextField
+                      margin="normal"
+                      required
+                      fullWidth
+                      name="password"
+                      label="Passwort"
+                      type="password"
+                      id="password"
+                      autoComplete="current-password"
+                      value={values.password}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      error={touched.password && Boolean(errors.password)}
+                      helperText={touched.password && errors.password}
+                      variant="filled"
+                  />
+
+                  {isError && error && (
+                      <Alert severity="error" sx={{ mt: 2, width: '100%' }}>
+                        {typeof error === 'object' && error !== null && 'message' in error
+                            ? String(error.message)
+                            : 'Ein unerwarteter Fehler ist aufgetreten.'}
+                      </Alert>
                   )}
-                </Button>
-              </Box>
-            </form>
-          )}
-        </Formik>
+
+                  <Button
+                      type="submit"
+                      fullWidth
+                      variant="contained"
+                      disabled={status === 'pending'}
+                      startIcon={status === 'pending' ? <CircularProgress size={20} color="inherit" /> : <LockOpenIcon />}
+                      sx={{
+                        mt: 3,
+                        mb: 2,
+                        py: 1.5,
+                        fontSize: '1rem',
+                        fontWeight: 'bold',
+                        bgcolor: '#235817',
+                        '&:hover': {
+                          bgcolor: '#1a4311',
+                        }
+                      }}
+                  >
+                    {status === 'pending' ? 'Anmelden...' : 'Anmelden'}
+                  </Button>
+                </Box>
+            )}
+          </Formik>
+        </Paper>
       </Box>
-    </Box>
   );
 };
 

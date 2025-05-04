@@ -1,63 +1,84 @@
-import {Box, Button, Card, CardContent, CardHeader} from "@mui/material";
+import {
+    Box,
+    Card,
+    CardContent,
+    CardHeader,
+    Typography,
+    Tooltip,
+    IconButton
+} from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import {Container} from "../../domain/Container.ts";
+import { Container } from "../../domain/Container.ts";
+import { useTheme } from '@mui/material/styles';
+import React from "react";
 
 interface Props {
     container: Container;
-    onDelete: (id: number) => void;
-    onEdit: (id: number) => void;
+    onDelete?: (id: number) => void;
+    onEdit?: (id: number) => void;
 }
 
-const ContainerCard = ({container, onDelete, onEdit}: Props) => {
+const ContainerCard = ({ container, onDelete, onEdit }: Props) => {
+    const theme = useTheme();
 
-    const cardWidth =  290;
+    const handleEditClick = (event: React.MouseEvent) => {
+        event.stopPropagation();
+        onEdit?.(container.id);
+    };
 
-    return <Card
-        key={container.id}
-        sx={{
-            width: cardWidth,
-            display: "flex",
-            flexDirection: "column",
-            borderRadius: 3,
-            boxShadow: 3,
-            transition: "transform 0.3s ease, box-shadow 0.3s ease",
-            "&:hover": {
-                transform: "scale(1.002)",
-                boxShadow: 6,
-            },
-        }}
-    >
-        <CardHeader
-            title={container.type}
-            sx={{ textAlign: "center", fontWeight: "bold", paddingBottom: 0 }}
-        />
+    const handleDeleteClick = (event: React.MouseEvent) => {
+        event.stopPropagation();
+        onDelete?.(container.id);
+    };
 
-            <Box sx={{ textAlign: "center", mt: 1 }}>
-                <div><strong>Pfandpreis:</strong> {container.depositAmount} €</div>
-            </Box>
-
-
-        <CardContent sx={{ display: "flex", gap: 1.25, mt: "auto", justifyContent: "center" }}>
-                <Button
-                    onClick={(event) => { event.stopPropagation(); onEdit(container.id); }}
-                    variant="contained"
-                    startIcon={<EditIcon />}
-                    sx={{ fontSize: "0.8rem" }}
-                >
-                    Bearbeiten
-                </Button>
-                <Button
-                    onClick={(event) => { event.stopPropagation(); onDelete(container.id); }}
-                    variant="contained"
-                    color="error"
-                    startIcon={<DeleteIcon />}
-                    sx={{ fontSize: "0.8rem" }}
-                >
-                    Löschen
-                </Button>
-        </CardContent>
-    </Card>
-}
+    return (
+        <Card
+            elevation={2}
+            sx={{
+                display: "flex",
+                flexDirection: "column",
+                height: '100%',
+                borderRadius: theme.shape.borderRadius * 1.5,
+                transition: "box-shadow 0.3s ease-in-out, transform 0.2s ease-in-out",
+                '&:hover': {
+                    boxShadow: 6,
+                    transform: 'translateY(-4px)',
+                    '& .container-card-actions': {
+                        opacity: 1,
+                    }
+                }
+            }}
+        >
+            <CardHeader
+                title={
+                    <Typography variant="h6" component="div" noWrap sx={{ fontWeight: 'medium' }}>
+                        {container.type || 'Unbenannter Behälter'}
+                    </Typography>
+                }
+                action={
+                    <Box className="container-card-actions" sx={{ opacity: { xs: 1, md: 0 }, transition: 'opacity 0.2s' }}>
+                        <Tooltip title="Bearbeiten">
+                            <IconButton size="small" onClick={handleEditClick}>
+                                <EditIcon fontSize="small" />
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Löschen">
+                            <IconButton size="small" onClick={handleDeleteClick}>
+                                <DeleteIcon color="error" fontSize="small" />
+                            </IconButton>
+                        </Tooltip>
+                    </Box>
+                }
+                sx={{ pb: 0 }}
+            />
+            <CardContent sx={{ flexGrow: 1, pt: 1.5 }}>
+                <Typography variant="body1" color="text.primary">
+                    Pfand: {(container.depositAmount ?? 0).toFixed(2)} €
+                </Typography>
+            </CardContent>
+        </Card>
+    );
+};
 
 export default ContainerCard;

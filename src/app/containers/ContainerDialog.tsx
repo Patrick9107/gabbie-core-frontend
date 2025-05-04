@@ -1,14 +1,16 @@
 import { Container } from "../../domain/Container.ts";
 import {
-    Box,
     Button,
     Dialog,
     DialogActions,
     DialogContent,
-    DialogTitle, InputAdornment,
+    DialogTitle,
+    InputAdornment,
     TextField,
+    Stack,
+    Alert
 } from "@mui/material";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useState, useEffect } from "react";
 
 interface Props {
     open: boolean;
@@ -16,83 +18,122 @@ interface Props {
     container: Container;
     onClose: () => void;
     onSubmit: () => void;
-    onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+    onChange: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+    apiError: string | null;
+    clearApiError: () => void;
 }
 
-function ContainerDialog({ open, edit, container, onClose, onSubmit, onChange }: Props) {
-    interface error {
-        type?: string;
-        depositAmount?: string;
-    }
+interface ErrorState {
+    type?: string;
+    depositAmount?: string;
+}
 
-    const noErrors = {
-        type: "",
-        depositAmount: ""
-    };
+const noErrors: ErrorState = {
+    type: undefined,
+    depositAmount: undefined,
+};
 
-    const [errors, setErrors] = useState<error>(noErrors);
+function ContainerDialog({
+                             open,
+                             edit,
+                             container,
+                             onClose,
+                             onSubmit,
+                             onChange,
+                             apiError,
+                             clearApiError
+                         }: Props) {
 
-    // Überprüft, ob alle erforderlichen Felder ausgefüllt sind
+    const [errors, setErrors] = useState<ErrorState>(noErrors);
+
+    useEffect(() => {
+        if (open) {
+            setErrors(noErrors);
+            if (apiError) {
+                clearApiError();
+            }
+        }
+    }, [open, edit, container.id, apiError, clearApiError]);
+
     const validateForm = () => {
-        const newErrors: error = {};
-        if (!container.depositAmount) newErrors.depositAmount = "Pfandpreis ist erforderlich";
-        if (!container.type) newErrors.type = "Typ ist erforderlich";
+        const newErrors: ErrorState = {};
+        const depositNum = Number(container.depositAmount);
+
+        if (!container.type?.trim()) {
+            newErrors.type = "Typ ist erforderlich";
+        }
+        if (isNaN(depositNum) || depositNum <= 0) {
+            newErrors.depositAmount = "Pfandpreis muss eine Zahl größer 0 sein";
+        }
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
-    const onCloseDialog = () => {
-        setErrors(noErrors);
+    const handleDialogClose = () => {
         onClose();
-    }
+    };
 
-    // Form submit Handler
-    const handleSubmit = () => {
+    const handleDialogSubmit = () => {
+        clearApiError();
         if (validateForm()) {
             onSubmit();
         }
     };
 
     return (
-        <Dialog open={open} onClose={onCloseDialog}>
-            <DialogTitle>{edit ? "Behälter bearbeiten" : "Neuer Behälter"}</DialogTitle>
+        <Dialog open={open} onClose={handleDialogClose} maxWidth="sm" fullWidth>
+            <DialogTitle sx={{ fontWeight: 'medium' }}>
+                {edit ? "Behälter bearbeiten" : "Neuen Behälter erstellen"}
+            </DialogTitle>
             <DialogContent>
-                <Box sx={{ display: "flex", gap: "8px", marginY: "4px" }}>
+                {apiError && (
+                    <Alert severity="error" sx={{ mb: 2 }}>
+                        {apiError}
+                    </Alert>
+                )}
+
+                <Stack spacing={2} sx={{ mt: 1 }}>
                     <TextField
                         label="Typ"
                         name="type"
-                        type="string"
-                        value={container.type}
                         fullWidth
                         margin="dense"
                         onChange={onChange}
+                        value={container.type || ''}
                         error={!!errors.type}
                         helperText={errors.type}
+                        required
+                        autoFocus
                     />
                     <TextField
                         label="Pfandpreis"
                         name="depositAmount"
                         type="number"
-                        value={container.depositAmount}
                         fullWidth
                         margin="dense"
                         onChange={onChange}
+                        value={container.depositAmount}
                         error={!!errors.depositAmount}
                         helperText={errors.depositAmount}
+                        required
                         slotProps={{
                             input: {
-                                endAdornment: <InputAdornment position="end">€</InputAdornment>
+                              endAdornment: <InputAdornment position="end">€</InputAdornment>
+                            },
+                            htmlInput: {
+                                step: "0.01", min: "0.01"
                             }
                         }}
                     />
-                </Box>
+                </Stack>
             </DialogContent>
-            <DialogActions>
-                <Button onClick={onClose} color="error">
+            <DialogActions sx={{ padding: "16px 24px" }}>
+                <Button onClick={handleDialogClose} color="inherit">
                     Abbrechen
                 </Button>
-                <Button onClick={handleSubmit} color="success">
-                    Speichern
+                <Button onClick={handleDialogSubmit} variant="contained" color="primary">
+                    {edit ? "Änderungen speichern" : "Behälter erstellen"}
                 </Button>
             </DialogActions>
         </Dialog>

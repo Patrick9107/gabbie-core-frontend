@@ -1,17 +1,18 @@
-import { Vehicle } from "../../domain/Vehicle.ts";
-import { Dialog, DialogTitle, DialogContent, TextField, DialogActions, Button } from "@mui/material";
-import { ChangeEvent } from "react";
+import {Vehicle} from "../../domain/Vehicle.ts";
+import {Dialog, DialogTitle, DialogContent, TextField, DialogActions, Button} from "@mui/material";
+import {ChangeEvent} from "react";
 
 interface Props {
-    open: boolean;
-    edit: boolean;
-    vehicle: Vehicle;
-    onClose: () => void;
-    onSubmit: () => void;
-    onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+    open: boolean,
+    edit: boolean,
+    vehicle: Vehicle,
+    onClose: () => void,
+    onSubmit: () => void,
+    onChange: (e: ChangeEvent<HTMLInputElement>) => void,
+    apiError?: string | null
 }
 
-function VehicleDialog({ open, edit, vehicle, onClose, onSubmit, onChange }: Props) {
+function VehicleDialog({open, edit, vehicle, onClose, onSubmit, onChange}: Props) {
     return (
         <Dialog open={open} onClose={onClose}>
             <DialogTitle>{edit ? "Fahrzeug bearbeiten" : "Neues Fahrzeug"}</DialogTitle>

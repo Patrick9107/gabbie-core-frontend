@@ -1,47 +1,54 @@
-import {useEffect, useState} from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import {
     Button,
     Dialog,
     DialogActions,
     DialogContent,
+    DialogTitle,
     Box,
     Typography,
-    Divider, Table, TableHead, TableBody, TableRow, TableCell
+    List,
+    ListItem,
+    ListItemText,
+    IconButton,
+    Divider,
+    Chip,
 } from "@mui/material";
+import DeleteIcon from '@mui/icons-material/Delete';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { Product } from "../../domain/Product.ts";
 import OrderItemCards from "./OrderItemCards.tsx";
+import {OrderItem} from "../../domain/OrderItem.ts";
 
 interface Props {
     isProductDialogOpen: boolean;
     onProductDialogClose: () => void;
     products: Product[];
-    setOrderItems: (items: { product: Product | null; quantity: number }[]) => void;
-    newOrderItems: { product: Product | null; quantity: number }[];
+    setOrderItems: (items: OrderItem[]) => void;
+    newOrderItems: {product: Product | null, quantity: number}[];
 }
 
-const OrderItemsDialog = ({ isProductDialogOpen, onProductDialogClose, products, setOrderItems, newOrderItems }: Props) => {
+const OrderItemsDialog = ({
+                              isProductDialogOpen,
+                              onProductDialogClose,
+                              products,
+                              setOrderItems,
+                              newOrderItems
+                          }: Props) => {
 
-    const [selectedOrderItems, setSelectedOrderItems] = useState<{ product: Product | null; quantity: number }[]>(newOrderItems);
+    const [selectedItems, setSelectedItems] = useState<OrderItem[]>([]);
 
-    const onProductDialogCloseClearItems = () => {
-        setOrderItems(selectedOrderItems);
-        setSelectedOrderItems([]);
-        onProductDialogClose();
-    }
-    
     useEffect(() => {
-       if (isProductDialogOpen) {
-           setSelectedOrderItems(newOrderItems);
-       } 
+        if (isProductDialogOpen) {
+            const validInitialItems = newOrderItems.filter(item => item.product !== null) as OrderItem[];
+            setSelectedItems(validInitialItems);
+        }
     }, [isProductDialogOpen, newOrderItems]);
 
-    const handleAddButtonClicked = (product: Product) => {
-        setSelectedOrderItems(prevItems => {
-
-            const existingItemIndex = prevItems.findIndex(item => item.product?.id === product.id);
-
+    const handleAddOrIncrement = (product: Product) => {
+        setSelectedItems(prevItems => {
+            const existingItemIndex = prevItems.findIndex(item => item.product.id === product.id);
             if (existingItemIndex !== -1) {
-
                 const updatedItems = [...prevItems];
                 updatedItems[existingItemIndex] = {
                     ...updatedItems[existingItemIndex],
@@ -49,127 +56,160 @@ const OrderItemsDialog = ({ isProductDialogOpen, onProductDialogClose, products,
                 };
                 return updatedItems;
             } else {
-
                 return [...prevItems, { product, quantity: 1 }];
             }
         });
-    }
+    };
 
-    const handleRemoveButtonClicked = (product: Product) => {
-        setSelectedOrderItems(prevItems => {
+    const handleRemoveOrDecrement = (product: Product) => {
+        setSelectedItems(prevItems => {
+            const existingItemIndex = prevItems.findIndex(item => item.product.id === product.id);
+            if (existingItemIndex === -1) return prevItems;
 
-            const existingItemIndex = prevItems.findIndex(item => item.product?.id === product.id);
-
-
-            if (existingItemIndex === -1) {
-                return prevItems;
-            }
-
-
-            const updatedItems = [...prevItems];
-
-
-            if (updatedItems[existingItemIndex].quantity > 1) {
+            const currentQuantity = prevItems[existingItemIndex].quantity;
+            if (currentQuantity > 1) {
+                const updatedItems = [...prevItems];
                 updatedItems[existingItemIndex] = {
                     ...updatedItems[existingItemIndex],
-                    quantity: updatedItems[existingItemIndex].quantity - 1
+                    quantity: currentQuantity - 1
                 };
                 return updatedItems;
+            } else {
+                return prevItems.filter((_, index) => index !== existingItemIndex);
             }
-
-
-            return updatedItems.filter((_, index) => index !== existingItemIndex);
-        });
-    }
-
-    const onQuantityChange = (quantity: number, product: Product) => {
-        setSelectedOrderItems(prevItems => {
-            const existingItem = prevItems.find(item => item.product?.id === product.id);
-
-            if (existingItem) {
-                if (quantity === 0) {
-                    return prevItems.filter(item => item.product?.id !== product.id);
-                }
-
-                return prevItems.map(item =>
-                    item.product?.id === product.id
-                        ? { ...item, quantity }
-                        : item
-                );
-            }
-
-            return [...prevItems, { product, quantity }];
         });
     };
 
+    const handleRemoveFromSummary = (productId: number) => {
+        setSelectedItems(prevItems => prevItems.filter(item => item.product.id !== productId));
+    };
+
+    const handleQuantityChange = (quantity: number, product: Product) => {
+        const newQuantity = Math.max(0, quantity || 0);
+        setSelectedItems(prevItems => {
+            const existingItemIndex = prevItems.findIndex(item => item.product.id === product.id);
+            if (newQuantity === 0) {
+                if (existingItemIndex !== -1) {
+                    return prevItems.filter((_, index) => index !== existingItemIndex);
+                }
+                return prevItems;
+            }
+            if (existingItemIndex !== -1) {
+                const updatedItems = [...prevItems];
+                updatedItems[existingItemIndex] = { ...updatedItems[existingItemIndex], quantity: newQuantity };
+                return updatedItems;
+            } else {
+                return [...prevItems, { product, quantity: newQuantity }];
+            }
+        });
+    };
+
+    const totalSum = useMemo(() => {
+        return selectedItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+    }, [selectedItems]);
+
+    const quantitiesMap = useMemo(() => {
+        return Object.fromEntries(
+            selectedItems.map(item => [item.product.id, item.quantity])
+        );
+    }, [selectedItems]);
+
+    const handleConfirmAndClose = () => {
+        setOrderItems(selectedItems);
+        onProductDialogClose();
+    };
+
+    const handleCancel = () => {
+        onProductDialogClose();
+    };
 
     return (
         <Dialog
-            maxWidth="xl"
-            sx={{ '& .MuiDialog-paper': { height: '600px' } }}
             open={isProductDialogOpen}
-            onClose={onProductDialogCloseClearItems}
+            onClose={handleCancel}
+            maxWidth="lg"
+            fullWidth
         >
-            <DialogContent>
-
+            <DialogTitle sx={{ display: 'flex', alignItems: 'center', borderBottom: (theme) => `1px solid ${theme.palette.divider}` }}>
+                <ShoppingCartIcon sx={{ mr: 1 }} />
+                Produkte auswählen
+            </DialogTitle>
+            <DialogContent dividers sx={{ p: 0, m: 0, overflow: 'hidden', height: '70vh' }}>
                 <Box sx={{
-                    display: 'flex',
-                    width: '100%',
-                    height: '100%'
+                    display: 'grid',
+                    height: '100%',
+                    gridTemplateColumns: { xs: '1fr', md: '1fr 2fr' },
                 }}>
+
                     <Box sx={{
-                        flex: 1,
                         display: 'flex',
                         flexDirection: 'column',
-                        overflow: 'auto'
+                        height: '100%',
+                        borderRight: { md: (theme) => `1px solid ${theme.palette.divider}` },
+                        overflow: 'hidden'
                     }}>
-                        <Typography variant="h5">
-                            Übersicht
-                        </Typography>
-                        { selectedOrderItems.length > 0 &&
-                            <Table>
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell> Produktname </TableCell>
-                                        <TableCell> Menge </TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {selectedOrderItems.map(value => (
-                                        <TableRow key={"" + value?.product?.id + value.quantity}>
-                                            <TableCell>{value?.product?.name}</TableCell>
-                                            <TableCell>{value?.quantity}</TableCell>
-                                        </TableRow>
-                                        )
-                                    )}
-                                </TableBody>
-                            </Table>
-                        }
+                        <Box sx={{ p: 2 }}>
+                            <Typography variant="h6" gutterBottom>
+                                Auswahl
+                            </Typography>
+                        </Box>
+                        <Box sx={{ flexGrow: 1, overflowY: 'auto', px: 1 }}>
+                            {selectedItems.length === 0 ? (
+                                <Typography variant="body2" color="textSecondary" sx={{ p: 2, textAlign: 'center' }}>
+                                    Keine Produkte ausgewählt.
+                                </Typography>
+                            ) : (
+                                <List dense>
+                                    {selectedItems.map((item) => (
+                                        <ListItem
+                                            key={item.product.id}
+                                            secondaryAction={
+                                                <IconButton edge="end" aria-label="delete" onClick={() => handleRemoveFromSummary(item.product.id)}>
+                                                    <DeleteIcon fontSize="small" />
+                                                </IconButton>
+                                            }
+                                            sx={{ pr: 5 }}
+                                        >
+                                            <ListItemText
+                                                primary={item.product.name}
+                                                secondary={`Preis: ${(item.product.price * item.quantity).toFixed(2)} €`}
+                                            />
+                                            <Chip label={`x ${item.quantity}`} size="small" sx={{ ml: 1 }}/>
+                                        </ListItem>
+                                    ))}
+                                </List>
+                            )}
+                        </Box>
+                        <Divider />
+                        <Box sx={{ p: 2, mt: 'auto', backgroundColor: (theme) => theme.palette.grey[100] }}>
+                            <Typography variant="h6" align="right">
+                                Gesamtsumme: {totalSum.toFixed(2)} €
+                            </Typography>
+                        </Box>
                     </Box>
-                    <Divider orientation="vertical" flexItem />
-                    <Box sx={{
-                        flex: 3,
-                        overflow: 'auto',
-                        pr: 2
-                    }}>
 
+                    <Box sx={{ height: '100%', overflowY: 'auto', p: 2 }}>
                         <OrderItemCards
                             products={products}
-                            onAddClicked={handleAddButtonClicked}
-                            onRemoveButtonClicked={handleRemoveButtonClicked}
-                            quantities={Object.fromEntries(selectedOrderItems.map(item => [item.product?.id, item.quantity]))}
-                            onQuantityChange={onQuantityChange}
+                            onAddClicked={handleAddOrIncrement}
+                            onRemoveButtonClicked={handleRemoveOrDecrement}
+                            quantities={quantitiesMap}
+                            onQuantityChange={handleQuantityChange}
                         />
                     </Box>
+
                 </Box>
             </DialogContent>
-            <DialogActions>
-                <Button onClick={onProductDialogCloseClearItems} color="secondary">
-                    Zurück
+            <DialogActions sx={{ borderTop: (theme) => `1px solid ${theme.palette.divider}`, p: '16px 24px' }}>
+                <Button onClick={handleCancel} color="inherit">
+                    Abbrechen
+                </Button>
+                <Button onClick={handleConfirmAndClose} variant="contained" color="primary">
+                    Auswahl übernehmen
                 </Button>
             </DialogActions>
         </Dialog>
-    )
-}
+    );
+};
 
 export default OrderItemsDialog;

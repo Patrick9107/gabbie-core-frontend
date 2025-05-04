@@ -3,8 +3,14 @@ import { Paper, Typography, Box } from "@mui/material";
 
 const getNextSaturday = () => {
     const now = new Date();
-    const saturday = new Date();
-    saturday.setDate(now.getDate() + ((6 - now.getDay() + 7) % 7));
+    const saturday = new Date(now.getTime());
+    const currentDay = now.getDay();
+    let daysToAdd = (6 - currentDay + 7) % 7;
+    if (daysToAdd === 0) {
+        daysToAdd = 7;
+    }
+
+    saturday.setDate(now.getDate() + daysToAdd);
     saturday.setHours(8, 0, 0, 0);
     return saturday;
 };
@@ -12,7 +18,8 @@ const getNextSaturday = () => {
 const getTimeUntilNextSaturday = () => {
     const now = new Date();
     const nextSaturday = getNextSaturday();
-    return Math.floor((nextSaturday - now) / 1000);
+    const diffMilliseconds = nextSaturday.getTime() - now.getTime();
+    return Math.max(0, Math.floor(diffMilliseconds / 1000));
 };
 
 export default function CountdownTimer() {
@@ -37,7 +44,7 @@ export default function CountdownTimer() {
     const circumference = 2 * Math.PI * radius;
     const strokeDashoffset = circumference * (1 - percentage);
 
-    const formatTime = (seconds) => {
+    const formatTime = (seconds: number) => {
         const days = Math.floor(seconds / (24 * 60 * 60));
         const hours = Math.floor((seconds % (24 * 60 * 60)) / 3600);
         const minutes = Math.floor((seconds % 3600) / 60);
@@ -50,7 +57,6 @@ export default function CountdownTimer() {
             <Typography variant="h6">Zeit bis zum nächsten Liefer-Wochenende</Typography>
             <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", mt: 2 }}>
                 <svg width="120" height="120" viewBox="0 0 120 120">
-                    {/* Hintergrund-Kreis */}
                     <circle
                         cx="60"
                         cy="60"
@@ -59,7 +65,6 @@ export default function CountdownTimer() {
                         stroke="#e0e0e0"
                         strokeWidth="10"
                     />
-                    {/* Fortschritt-Kreis (SPIEGELVERKEHRT) */}
                     <circle
                         cx="60"
                         cy="60"

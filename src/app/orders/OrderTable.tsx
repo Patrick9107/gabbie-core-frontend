@@ -1,28 +1,25 @@
+import React, { useState, Fragment, useMemo } from 'react';
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableRow,
-    IconButton,
-    Collapse,
-    Box,
-    Button,
-    Paper,
-    Typography,
-    Checkbox,
-    MenuItem, Menu,
+    Table, TableBody, TableCell, TableHead, TableRow, IconButton, Collapse, Box, Button, Paper, Typography, Checkbox,
+    TableContainer, Alert, Stack, Tooltip, TableSortLabel, useTheme
 } from '@mui/material';
 import { KeyboardArrowDown, KeyboardArrowUp } from "@mui/icons-material";
-import FilterListIcon from "@mui/icons-material/FilterList";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
-import { useState, Fragment, useEffect } from 'react';
+import RouteIcon from '@mui/icons-material/Route';
 import { OrderStatus } from "../../domain/enums/OrderStatus.ts";
 import { OrderSource } from "../../domain/enums/OrderSource.ts";
 import { OrderResponse } from "../../domain/OrderResponse.ts";
 import { useNavigate } from "react-router-dom";
-import { Order } from '../../domain/Order.ts';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import 'dayjs/locale/de';
+import dayjs, { Dayjs } from 'dayjs';
+
+type OrderSortKey = 'phoneNumber' | 'address' | 'totalAmount' | 'deliveryDate';
+type SortDirection = 'asc' | 'desc';
 
 interface Props {
     orders: OrderResponse[];
@@ -30,67 +27,103 @@ interface Props {
     onDelete: (id: number) => void;
 }
 
-const sumSx = {
-    borderBottom: "none",
-    fontWeight: "bold"
-};
+const getOrderStatusLabel = (status: number | undefined | null): string => {
+    return status !== null && status !== undefined ? OrderStatus[status] || 'Unbekannt' : 'Unbekannt';
+}
+const getOrderSourceLabel = (source: number | undefined | null): string => {
+    return source !== null && source !== undefined ? OrderSource[source] || 'Unbekannt' : 'Unbekannt';
+}
+
 
 const OrderTable = ({ orders, onEdit, onDelete }: Props) => {
+    const theme = useTheme();
     const [openRows, setOpenRows] = useState(new Map<number, boolean>());
     const [selecting, setSelecting] = useState(false);
     const [selectedOrders, setSelectedOrders] = useState<number[]>([]);
-    const [uncompletedOrders, setUncompletedOrders] = useState<Order[]>([]);
-    const [filterDate, setFilterDate] = useState<string>("");
+    const [filterDate, setFilterDate] = useState<Dayjs | null>(null);
     const navigate = useNavigate();
+    const [sortOptions, setSortOptions] = useState<{ key: OrderSortKey; direction: SortDirection } | null>(null);
 
-    const [sortOptions, setSortOptions] = useState<{ key: "date" | "price"; asc: boolean } | null>(null);
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const open = Boolean(anchorEl);
-
-    const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-        setAnchorEl(event.currentTarget);
+    const handleSortRequest = (property: OrderSortKey) => {
+        if (!sortOptions || sortOptions.key !== property) {
+            setSortOptions({ key: property, direction: 'asc' });
+        } else if (sortOptions.direction === 'asc') {
+            setSortOptions({ key: property, direction: 'desc' });
+        } else {
+            setSortOptions(null);
+        }
     };
 
-    const handleClose = () => {
-        setAnchorEl(null);
+    const filteredOrders = useMemo(() => {
+        return filterDate
+            ? orders.filter(order => {
+                if (!order.deliveryDate) return false;
+                return dayjs(order.deliveryDate).isSame(filterDate, 'day');
+            })
+            : orders;
+    }, [orders, filterDate]);
+
+    const sortedOrders = useMemo(() => {
+        const ordersToSort = [...filteredOrders];
+        if (sortOptions) {
+            ordersToSort.sort((a, b) => {
+                let aValue: string | number | null = null;
+                let bValue: string | number | null = null;
+
+                switch (sortOptions.key) {
+                    case 'deliveryDate':
+                        aValue = a.deliveryDate ? dayjs(a.deliveryDate).valueOf() : null;
+                        bValue = b.deliveryDate ? dayjs(b.deliveryDate).valueOf() : null;
+                        if (aValue === null) aValue = sortOptions.direction === 'asc' ? Infinity : -Infinity;
+                        if (bValue === null) bValue = sortOptions.direction === 'asc' ? Infinity : -Infinity;
+                        break;
+                    case 'totalAmount':
+                        aValue = a.totalAmount ?? 0;
+                        bValue = b.totalAmount ?? 0;
+                        break;
+                    case 'phoneNumber':
+                        aValue = a.phoneNumber?.trim() ?? '';
+                        bValue = b.phoneNumber?.trim() ?? '';
+                        break;
+                    case 'address':
+                        aValue = a.address?.trim() ?? '';
+                        bValue = b.address?.trim() ?? '';
+                        break;
+                    default: return 0;
+                }
+
+                if (typeof aValue === 'string' && typeof bValue === 'string') {
+                    return sortOptions.direction === 'asc'
+                        ? aValue.localeCompare(bValue, 'de')
+                        : bValue.localeCompare(aValue, 'de');
+                } else if (typeof aValue === 'number' && typeof bValue === 'number') {
+                    return sortOptions.direction === 'asc'
+                        ? aValue - bValue
+                        : bValue - aValue;
+                }
+                return 0;
+            });
+        }
+        return ordersToSort;
+    }, [filteredOrders, sortOptions]);
+
+    const isOrderIncomplete = (order: OrderResponse): boolean => {
+        return !order.phoneNumber?.trim() || !order.address?.trim() || order.orderItems.length === 0 || !order.deliveryDate;
     };
 
-  const filteredOrders = filterDate
-    ? orders.filter(order => {
-      if (!order.deliveryDate) return false;
+    const uncompletedOrdersMap = useMemo(() => {
+        const map = new Map<number, boolean>();
+        orders.forEach(o => {
+            if (isOrderIncomplete(o)) {
+                map.set(o.id, true);
+            }
+        });
+        return map;
+    }, [orders]);
 
-      const delivery = new Date(order.deliveryDate);
-      const [year, month, day] = filterDate.split("-"); // yyyy-mm-dd
-
-      return (
-        delivery.getFullYear() === parseInt(year) &&
-        delivery.getMonth() + 1 === parseInt(month) && // getMonth is 0-based
-        delivery.getDate() === parseInt(day)
-      );
-    })
-    : orders;
-
-    const sortedOrders = [...filteredOrders];
-    if (sortOptions) {
-      sortedOrders.sort((a, b) => {
-        const getValue = (key: "date" | "price", order: OrderResponse) => {
-          switch (key) {
-            case "date":
-              { const time = new Date(order.deliveryDate || "").getTime();
-              return isNaN(time) ? (sortOptions!.asc ? Infinity : -Infinity) : time; }
-            case "price":
-              return order.totalAmount;
-          }
-        };
-
-        const aValue = getValue(sortOptions.key, a);
-        const bValue = getValue(sortOptions.key, b);
-        return sortOptions.asc ? aValue - bValue : bValue - aValue;
-      });
-    }
 
     const toggleRow = (id: number) => {
-        if (selecting) return; // Verhindert das Aufklappen während der Auswahl
+        if (selecting) return;
         setOpenRows(prev => {
             const newMap = new Map(prev);
             newMap.set(id, !newMap.get(id));
@@ -104,178 +137,334 @@ const OrderTable = ({ orders, onEdit, onDelete }: Props) => {
         );
     };
 
+    const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.checked) {
+            const newSelecteds = sortedOrders.map((n) => n.id);
+            setSelectedOrders(newSelecteds);
+            return;
+        }
+        setSelectedOrders([]);
+    };
+
+
     const handleRouteCalculation = () => {
         const selectedOrdersData = orders.filter(order => selectedOrders.includes(order.id));
         navigate(`/routes`, { state: { orders: selectedOrdersData } });
     };
 
-    useEffect(() => {
-        const result = orders.filter(o =>
-          !o.phoneNumber || !o.address || o.orderItems.length === 0 || !o.deliveryDate
-        );
+    const getRowBackgroundColor = (orderId: number): string => {
+        if (selectedOrders.includes(orderId)) {
+            return theme.palette.action.selected;
+        }
+        return 'inherit';
+    };
 
-        setUncompletedOrders(result);
-    }, [orders]);
+    const headerCellSx = useMemo(() => ({
+        py: 1.5, // Beibehaltung der reduzierten Polsterung
+        backgroundColor: '#3d9970', // Spezifische grüne Farbe hier einsetzen
+        color: '#ffffff', // Explizites Weiß für Text
+        fontWeight: 'bold',
+        whiteSpace: 'nowrap',
+        cursor: 'pointer',
+        '& .MuiTableSortLabel-root': {
+            color: '#ffffff !important', // Explizites Weiß für Sortier-Label
+            '&:hover': {
+                color: '#ffffff', // Explizites Weiß beim Hover
+            },
+            '&.Mui-active': {
+                color: '#ffffff', // Explizites Weiß bei Aktivität
+            }
+        },
+        '& .MuiTableSortLabel-icon': {
+            color: '#ffffff !important', // Explizites Weiß für Sortier-Icon
+        }
+    }), [theme]);
+
+    const nonSortableHeaderCellSx = useMemo(() => ({
+        py: 1,
+        backgroundColor: '#3d9970', // Spezifische grüne Farbe hier einsetzen
+        color: '#ffffff', // Explizites Weiß für Text
+        fontWeight: 'bold',
+        whiteSpace: 'nowrap'
+    }), [theme]); // theme bleibt Abhängigkeit
+
+    const sumSx = {
+        borderBottom: "none",
+        fontWeight: "bold",
+        pt: 1
+    };
 
     return (
-        <Paper sx={{ overflow: "hidden", borderRadius: "12px", boxShadow: 3, p: 2 }}>
-            <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2, alignItems: "center" }}>
-                <Box sx={{ display: "flex", gap: 2 }}>
-                    <Button
-                        variant="contained"
-                        sx={{ backgroundColor: "#3d9970", "&:hover": { backgroundColor: "#33805d" } }}
-                        onClick={() => {
-                            setSelecting(prev => {
-                                if (prev) setSelectedOrders([]);
-                                return !prev;
-                            });
-                        }}
-                    >
-                        {selecting ? "Auswahl beenden" : "Bestellungen auswählen"}
-                    </Button>
-                    {selecting && (
+        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="de">
+            <Paper sx={{ overflow: "hidden", borderRadius: theme.shape.borderRadius * 1.5, boxShadow: 3 }}>
+                <Stack
+                    direction={{ xs: 'column', sm: 'row' }}
+                    justifyContent="space-between"
+                    alignItems="center"
+                    spacing={2}
+                    sx={{ p: 2 }}
+                >
+                    <Stack direction="row" spacing={1} flexWrap="wrap">
                         <Button
-                            variant="contained"
-                            sx={{ backgroundColor: "#3d9970", "&:hover": { backgroundColor: "#33805d" } }}
-                            onClick={handleRouteCalculation}
-                            disabled={selectedOrders.length === 0}
+                            variant="outlined"
+                            size="small"
+                            color={selecting ? "secondary" : "primary"}
+                            onClick={() => {
+                                setSelecting(prev => {
+                                    if (prev) setSelectedOrders([]);
+                                    return !prev;
+                                });
+                            }}
                         >
-                            Route berechnen
+                            {selecting ? "Auswahl beenden" : "Auswählen"}
                         </Button>
-                    )}
-                </Box>
-                <input
-                    type="date"
-                    value={filterDate}
-                    onChange={(e) => setFilterDate(e.target.value)}
-                    style={{ border: "1px solid #ccc", padding: "6px 12px", borderRadius: "4px", font: "inherit" }}
-                />
-            </Box>
+                        {selecting && (
+                            <Button
+                                variant="contained"
+                                size="small"
+                                color="primary"
+                                startIcon={<RouteIcon />}
+                                onClick={handleRouteCalculation}
+                                disabled={selectedOrders.length === 0}
+                            >
+                                Route berechnen ({selectedOrders.length})
+                            </Button>
+                        )}
+                    </Stack>
+                    <DatePicker
+                        label="Filter Lieferdatum"
+                        value={filterDate}
+                        onChange={(newValue) => setFilterDate(newValue)}
+                        slotProps={{ textField: { size: 'small' } }}
+                        sx={{ maxWidth: { xs: '100%', sm: '200px' } }}
+                        format="DD.MM.YYYY"
+                    />
+                </Stack>
 
-            <Table sx={{ minWidth: 650 }}>
-                <TableHead>
-                    <TableRow sx={{ backgroundColor: "#3d9970", "& th": { color: "white", fontWeight: "bold" } }}>
-                        <TableCell />
-                        <TableCell>Telefonnummer</TableCell>
-                        <TableCell>Adresse</TableCell>
-                        <TableCell>Preis</TableCell>
-                        <TableCell>Aktueller Liefertermin</TableCell>
-                        <TableCell>Aktionen</TableCell>
-                        <TableCell>
-                          <Box sx={{ position: "relative" }}>
-                            <IconButton size="small" onClick={handleClick}>
-                              <FilterListIcon sx={{ color: "white" }} />
-                            </IconButton>
-                            <Menu
-                              anchorEl={anchorEl}
-                              open={open}
-                              onClose={handleClose}
-                              anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-                              transformOrigin={{ vertical: 'top', horizontal: 'left' }}
-                            >
-                              <MenuItem onClick={() => { setSortOptions({ key: "date", asc: true }); handleClose(); }}>Datum ↑</MenuItem>
-                              <MenuItem onClick={() => { setSortOptions({ key: "date", asc: false }); handleClose(); }}>Datum ↓</MenuItem>
-                              <MenuItem onClick={() => { setSortOptions({ key: "price", asc: true }); handleClose(); }}>Preis ↑</MenuItem>
-                              <MenuItem onClick={() => { setSortOptions({ key: "price", asc: false }); handleClose(); }}>Preis ↓</MenuItem>
-                            </Menu>
-                          </Box>
-                        </TableCell>
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                {sortedOrders.map(order => (
-                        <Fragment key={order.id}>
-                            <TableRow
-                              sx={{
-                                  backgroundColor: selectedOrders.includes(order.id)
-                                    ? "#d5f5e3"
-                                    : uncompletedOrders.some(o => o.id === order.id)
-                                      ? "#ffdddd"
-                                      : "inherit",
-                                  cursor: "pointer"
-                              }}
-                            >
-                                <TableCell>
+                <TableContainer sx={{ maxHeight: 'calc(100vh - 300px)' }}>
+                    <Table stickyHeader sx={{ minWidth: 750 }} size="small">
+                        <TableHead>
+                            <TableRow>
+                                <TableCell padding="checkbox" sx={nonSortableHeaderCellSx}>
                                     {selecting ? (
-                                        <Checkbox
-                                            checked={selectedOrders.includes(order.id)}
-                                            onChange={() => toggleOrderSelection(order.id)}
-                                        />
-                                    ) : (
-                                        <IconButton size="small" onClick={() => toggleRow(order.id)}>
-                                            {openRows.get(order.id) ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
-                                        </IconButton>
-                                    )}
+                                        <Tooltip title="Alle auswählen">
+                                            <Checkbox
+                                                sx={{color: theme.palette.primary.contrastText}}
+                                                indeterminate={selectedOrders.length > 0 && selectedOrders.length < sortedOrders.length}
+                                                checked={sortedOrders.length > 0 && selectedOrders.length === sortedOrders.length}
+                                                onChange={handleSelectAllClick}
+                                                slotProps={{ input: { "aria-label": 'Alle Bestellungen auswählen' } }}
+                                            />
+                                        </Tooltip>
+                                    ) : <Box sx={{width: 40}}/>}
                                 </TableCell>
-                                <TableCell>{order.phoneNumber}</TableCell>
-                                <TableCell>{order.address}</TableCell>
-                                <TableCell>{order.totalAmount}€</TableCell>
-                                <TableCell>
-                                    {order?.deliveryDate
-                                        ? new Date(order.deliveryDate).toLocaleDateString()
-                                        : "Kein Lieferdatum angegeben"}
-                                </TableCell>
-                                <TableCell>
-                                    <IconButton onClick={() => onEdit(order.id)}>
-                                        <EditIcon />
-                                    </IconButton>
-                                    <IconButton color="error" onClick={() => onDelete(order.id)}>
-                                        <DeleteIcon />
-                                    </IconButton>
-                                </TableCell>
-                              <TableCell>
-                              {/*  Leer halten !!!!!!!!!*/}
-                              </TableCell>
-                            </TableRow>
+                                <TableCell sx={nonSortableHeaderCellSx}>Details</TableCell>
 
-                            {!selecting && (
+                                <TableCell
+                                    sx={headerCellSx}
+                                    sortDirection={sortOptions?.key === 'phoneNumber' ? sortOptions.direction : false}
+                                    onClick={() => handleSortRequest('phoneNumber')}
+                                >
+                                    <TableSortLabel
+                                        active={sortOptions?.key === 'phoneNumber'}
+                                        direction={sortOptions?.key === 'phoneNumber' ? sortOptions.direction : 'asc'}
+                                    >
+                                        Telefon
+                                    </TableSortLabel>
+                                </TableCell>
+                                <TableCell
+                                    sx={headerCellSx}
+                                    sortDirection={sortOptions?.key === 'address' ? sortOptions.direction : false}
+                                    onClick={() => handleSortRequest('address')}
+                                >
+                                    <TableSortLabel
+                                        active={sortOptions?.key === 'address'}
+                                        direction={sortOptions?.key === 'address' ? sortOptions.direction : 'asc'}
+                                    >
+                                        Adresse
+                                    </TableSortLabel>
+                                </TableCell>
+                                <TableCell
+                                    sx={headerCellSx}
+                                    sortDirection={sortOptions?.key === 'totalAmount' ? sortOptions.direction : false}
+                                    onClick={() => handleSortRequest('totalAmount')}
+                                >
+                                    <TableSortLabel
+                                        active={sortOptions?.key === 'totalAmount'}
+                                        direction={sortOptions?.key === 'totalAmount' ? sortOptions.direction : 'asc'}
+                                    >
+                                        Preis
+                                    </TableSortLabel>
+                                </TableCell>
+                                <TableCell
+                                    sx={headerCellSx}
+                                    sortDirection={sortOptions?.key === 'deliveryDate' ? sortOptions.direction : false}
+                                    onClick={() => handleSortRequest('deliveryDate')}
+                                >
+                                    <TableSortLabel
+                                        active={sortOptions?.key === 'deliveryDate'}
+                                        direction={sortOptions?.key === 'deliveryDate' ? sortOptions.direction : 'asc'}
+                                    >
+                                        Lieferdatum
+                                    </TableSortLabel>
+                                </TableCell>
+                                <TableCell align="right" sx={nonSortableHeaderCellSx}>Aktionen</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {sortedOrders.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={6} sx={{ padding: 0, backgroundColor: "#f4f6f8" }}>
-                                        <Collapse in={openRows.get(order.id)} timeout="auto" unmountOnExit>
-                                            <Box sx={{ margin: 2 }}>
-                                                <Typography variant="h5" sx={{ fontWeight: "bold", marginBottom: 2 }}>
-                                                    Weitere Details
-                                                </Typography>
-                                                <ul>
-                                                    <li>Status: {OrderStatus[order.orderStatus]}</li>
-                                                    <li>Quelle: {OrderSource[order.orderSource]}</li>
-                                                    <li>Notiz: {order.note}</li>
-                                                </ul>
-                                                <Table size="small">
-                                                    <TableHead>
-                                                        <TableRow>
-                                                            <TableCell>Produkt</TableCell>
-                                                            <TableCell>Menge</TableCell>
-                                                            <TableCell>Preis</TableCell>
-                                                        </TableRow>
-                                                    </TableHead>
-                                                    <TableBody>
-                                                        {order.orderItems?.map((item, index) => (
-                                                            <TableRow key={index}>
-                                                                <TableCell>{item.product.name}</TableCell>
-                                                                <TableCell>{item.quantity}</TableCell>
-                                                                <TableCell>{item.product.price.toFixed(2)}€</TableCell>
-                                                            </TableRow>
-                                                        ))}
-                                                        <TableRow>
-                                                            <TableCell sx={sumSx}>Summe</TableCell>
-                                                            <TableCell sx={sumSx}>
-                                                                {order.orderItems?.reduce((prev, curr) => prev + curr.quantity, 0)}
-                                                            </TableCell>
-                                                            <TableCell sx={sumSx}>{order.totalAmount.toFixed(2)}€</TableCell>
-                                                        </TableRow>
-                                                    </TableBody>
-                                                </Table>
-                                            </Box>
-                                        </Collapse>
+                                    <TableCell colSpan={7} align="center">
+                                        <Alert severity="info" variant="outlined" sx={{ justifyContent: 'center', my: 3, border: 'none' }}>
+                                            Keine Bestellungen gefunden{filterDate ? ' für das ausgewählte Datum' : ''}.
+                                        </Alert>
                                     </TableCell>
                                 </TableRow>
+                            ) : (
+                                sortedOrders.map(order => (
+                                    <Fragment key={order.id}>
+                                        <TableRow
+                                            hover={!selecting}
+                                            sx={{
+                                                backgroundColor: getRowBackgroundColor(order.id),
+                                                cursor: selecting ? 'default' : 'pointer',
+                                                '&:hover': {
+                                                    backgroundColor: !selecting ? theme.palette.action.hover : undefined
+                                                },
+                                                borderLeft: uncompletedOrdersMap.has(order.id) ? `4px solid ${theme.palette.warning.main}` : 'none',
+                                            }}
+                                            onClick={() => !selecting && toggleRow(order.id)}
+                                        >
+                                            <TableCell padding="checkbox">
+                                                {selecting && (
+                                                    <Checkbox
+                                                        color="primary"
+                                                        checked={selectedOrders.includes(order.id)}
+                                                        onChange={() => toggleOrderSelection(order.id)}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        slotProps={{ input: { 'aria-labelledby': `select-order-${order.id}` } }}
+                                                    />
+                                                )}
+                                            </TableCell>
+                                            <TableCell sx={{ position: 'relative', textAlign: 'center', px: 1 }}> {/* Position relative für absolute Kindelemente & Zentrierung */}
+
+                                                {/* Warn-Icon: Absolut positioniert, links */}
+                                                {uncompletedOrdersMap.has(order.id) && !selecting && (
+                                                    <Tooltip title="Bestellung unvollständig (fehlende Adresse, Telefonnr., Produkte oder Lieferdatum)">
+                                                        {/* Box dient als Container für die absolute Positionierung */}
+                                                        <Box
+                                                            sx={{
+                                                                position: 'absolute',
+                                                                left: theme.spacing(1), // Abstand vom linken Rand (anpassen bei Bedarf)
+                                                                top: '50%', // Vertikal zentrieren
+                                                                transform: 'translateY(-50%)', // Feinjustierung für vertikale Mitte
+                                                                display: 'inline-flex', // Stellt sicher, dass das Icon richtig ausgerichtet ist
+                                                                color: theme.palette.warning.main, // Warnfarbe
+                                                                // Verhindert Klicks auf das Icon, damit der Zeilenklick funktioniert (optional)
+                                                                // pointerEvents: 'none',
+                                                            }}
+                                                        >
+                                                            <WarningAmberIcon fontSize="small" />
+                                                        </Box>
+                                                    </Tooltip>
+                                                )}
+
+                                                {!selecting && (
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={(e) => { e.stopPropagation(); toggleRow(order.id); }}
+                                                        // Optional: aria-controls/expanded für bessere Barrierefreiheit hinzufügen
+                                                    >
+                                                        {openRows.get(order.id) ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
+                                                    </IconButton>
+                                                )}
+                                                {/* Wenn selecting true ist, wird hier nichts gerendert, der Platz bleibt aber zentriert */}
+
+                                            </TableCell>
+                                            <TableCell>{order.phoneNumber || '-'}</TableCell>
+                                            <TableCell>{order.address || '-'}</TableCell>
+                                            <TableCell>{order.totalAmount?.toFixed(2)}€</TableCell>
+                                            <TableCell>
+                                                {order.deliveryDate
+                                                    ? dayjs(order.deliveryDate).format('DD.MM.YYYY')
+                                                    : <Typography variant="caption" color="textSecondary">Kein Datum</Typography>
+                                                }
+                                            </TableCell>
+                                            <TableCell align="right" sx={{whiteSpace: 'nowrap'}}>
+                                                <Tooltip title="Bearbeiten">
+                                                    <IconButton size="small" onClick={(e) => { e.stopPropagation(); onEdit(order.id); }}>
+                                                        <EditIcon fontSize="small" />
+                                                    </IconButton>
+                                                </Tooltip>
+                                                <Tooltip title="Löschen">
+                                                    <IconButton size="small" color="error" onClick={(e) => { e.stopPropagation(); onDelete(order.id); }}>
+                                                        <DeleteIcon fontSize="small" />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            </TableCell>
+                                        </TableRow>
+                                        {!selecting && (
+                                            <TableRow sx={{ backgroundColor: theme.palette.background.default }}>
+                                                <TableCell colSpan={7} sx={{ p: 0, borderBottom: 'none' }}>
+                                                    <Collapse in={openRows.get(order.id)} timeout="auto" unmountOnExit>
+                                                        <Box sx={{ px: 3, py: 2 }}>
+                                                            <Typography variant="h6" gutterBottom component="div" sx={{ fontWeight: 'medium', mb: 2 }}>
+                                                                Bestelldetails
+                                                            </Typography>
+                                                            <Stack direction={{xs: 'column', md: 'row'}} spacing={{xs: 1, md: 4}} mb={2}>
+                                                                <Box>
+                                                                    <Typography variant="body2" color="textSecondary">Status</Typography>
+                                                                    <Typography variant="body1">{getOrderStatusLabel(order.orderStatus)}</Typography>
+                                                                </Box>
+                                                                <Box>
+                                                                    <Typography variant="body2" color="textSecondary">Quelle</Typography>
+                                                                    <Typography variant="body1">{getOrderSourceLabel(order.orderSource)}</Typography>
+                                                                </Box>
+                                                                <Box sx={{ flexGrow: 1 }}>
+                                                                    <Typography variant="body2" color="textSecondary">Notiz</Typography>
+                                                                    <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word'}}>{order.note || '-'}</Typography>
+                                                                </Box>
+                                                            </Stack>
+
+                                                            <Table size="small" aria-label="order items" sx={{backgroundColor: theme.palette.background.paper, borderRadius: theme.shape.borderRadius }}>
+                                                                <TableHead>
+                                                                    <TableRow sx={{ '& th': {fontWeight: 'medium'}}}>
+                                                                        <TableCell>Produkt</TableCell>
+                                                                        <TableCell align="right">Menge</TableCell>
+                                                                        <TableCell align="right">Einzelpreis</TableCell>
+                                                                        <TableCell align="right">Gesamt</TableCell>
+                                                                    </TableRow>
+                                                                </TableHead>
+                                                                <TableBody>
+                                                                    {order.orderItems?.map((item, index) => (
+                                                                        <TableRow key={`${order.id}-item-${index}`} sx={{'&:last-child td, &:last-child th': { border: 0 }}}>
+                                                                            <TableCell component="th" scope="row">{item.product?.name ?? 'Unbekannt'}</TableCell>
+                                                                            <TableCell align="right">{item.quantity}</TableCell>
+                                                                            <TableCell align="right">{item.product?.price?.toFixed(2) ?? '0.00'}€</TableCell>
+                                                                            <TableCell align="right">{(item.quantity * (item.product?.price ?? 0)).toFixed(2)}€</TableCell>
+                                                                        </TableRow>
+                                                                    ))}
+                                                                    <TableRow><TableCell colSpan={4} sx={{py: 0.5, border: 'none'}}></TableCell></TableRow>
+                                                                    <TableRow>
+                                                                        <TableCell colSpan={2} sx={sumSx}></TableCell>
+                                                                        <TableCell align="right" sx={{...sumSx, borderBottom: 'none'}}>Summe:</TableCell>
+                                                                        <TableCell align="right" sx={{...sumSx, borderBottom: 'none'}}>{order.totalAmount?.toFixed(2) ?? '0.00'}€</TableCell>
+                                                                    </TableRow>
+                                                                </TableBody>
+                                                            </Table>
+                                                        </Box>
+                                                    </Collapse>
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                    </Fragment>
+                                ))
                             )}
-                        </Fragment>
-                    ))}
-                </TableBody>
-            </Table>
-        </Paper>
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            </Paper>
+        </LocalizationProvider>
     );
 };
 
