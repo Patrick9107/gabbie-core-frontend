@@ -56,7 +56,7 @@ const VehicleCard = ({ vehicle, onDelete, onEdit, onShowAddresses }: Props) => {
                 '&:hover': {
                     boxShadow: 6,
                     transform: 'translateY(-4px)',
-                    '& .vehicle-card-actions': { // Class for hover effect on actions
+                    '& .vehicle-card-actions': {
                         opacity: 1,
                     }
                 }
@@ -110,19 +110,17 @@ const VehicleCard = ({ vehicle, onDelete, onEdit, onShowAddresses }: Props) => {
                     </Typography>
                 </Stack>
 
-                {/* Keep Show Addresses button prominent if routeId exists */}
                 {vehicle.routeId > 0 && onShowAddresses && (
                     <Button
-                        variant="outlined" // Use outlined or text to distinguish from primary actions
+                        variant="outlined"
                         size="small"
                         startIcon={<VisibilityIcon />}
                         onClick={handleShowAddressesClick}
-                        sx={{ mt: 'auto', alignSelf: 'flex-start' }} // Push to bottom-left
+                        sx={{ mt: 'auto', alignSelf: 'flex-start' }}
                     >
                         Adressen anzeigen
                     </Button>
                 )}
-                {/* Add spacer if button not present to ensure consistent card height */}
                 {!(vehicle.routeId > 0 && onShowAddresses) && <Box sx={{mt: 'auto'}} />}
 
             </CardContent>
