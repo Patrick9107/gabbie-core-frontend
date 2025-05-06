@@ -13,6 +13,8 @@ import HistoryPage from "./app/history/HistoryPage.tsx";
 import Box from '@mui/material/Box';
 import { useAuth } from './app/login/AuthProvider';
 import ListContainers from "./app/containers/ListContainers.tsx";
+import ListSmsTemplates from "./app/smsTemplates/ListSmsTemplates.tsx"
+
 
 function RequireAuth({ children }: { children: JSX.Element }) {
   const { isTokenValid, role } = useAuth();
@@ -52,6 +54,7 @@ function AppRoutes() {
           <Route path="/fahrzeuge" element={<RequireAuth><VehicleList /></RequireAuth>} />
           <Route path="/routes" element={<RequireAuth><RoutesPage /></RequireAuth>}  />
           <Route path="/history" element={<RequireAuth><HistoryPage /></RequireAuth>}  />
+          <Route path="/Sms" element={<RequireAuth><ListSmsTemplates /></RequireAuth>}  />
           <Route path="/logout" element={<Logout />} />
         </Route>
       </Routes>

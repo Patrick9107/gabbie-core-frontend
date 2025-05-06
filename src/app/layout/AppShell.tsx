@@ -18,7 +18,17 @@ import {
   useTheme,
   Typography
 } from '@mui/material';
-import { Dashboard as DashboardIcon, LocalMall as LocalMallIcon, LocalShipping as LocalShippingIcon, History as HistoryIcon, ExitToApp as ExitToAppIcon, InventoryOutlined as InventoryOutlinedIcon, AddLocationAlt as AddLocationAltIcon, TakeoutDining as TakeoutDiningIcon } from '@mui/icons-material';
+import {
+  Dashboard as DashboardIcon,
+  LocalMall as LocalMallIcon,
+  LocalShipping as LocalShippingIcon,
+  History as HistoryIcon,
+  ExitToApp as ExitToAppIcon,
+  InventoryOutlined as InventoryOutlinedIcon,
+  AddLocationAlt as AddLocationAltIcon,
+  TakeoutDining as TakeoutDiningIcon,
+  Mail,
+} from '@mui/icons-material';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 
 const drawerWidth = 250;
@@ -66,6 +76,7 @@ function AppShell() {
     { text: 'Routenplanung', link: '/routes', icon: <AddLocationAltIcon /> },
     { text: 'Fahrzeuge', link: '/fahrzeuge', icon: <LocalShippingIcon /> },
     { text: 'Routen Historie', link: '/history', icon: <HistoryIcon /> },
+    { text: 'SMS', link: '/SMS', icon: <Mail /> },
     { divider: true },
     { text: 'Abmelden', link: '/logout', icon: <ExitToAppIcon />, action: handleLogoutClick }
   ], []);
