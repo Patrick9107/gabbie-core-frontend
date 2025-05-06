@@ -1,13 +1,14 @@
-import { ChangeEvent, useEffect, useState, useCallback } from "react";
+import { ChangeEvent, useEffect, useState, useCallback, lazy, Suspense } from "react";
 import { Product } from "../../domain/Product.ts";
 import { fetchProducts, createProduct, updateProduct, deleteProduct } from "../../infra/api/productService.ts";
 import { fetchContainers } from '../../infra/api/containerService.ts';
 import { Container } from '../../domain/Container.ts';
-import {Typography, Box, Alert, Snackbar, Stack, Button} from "@mui/material";
-import AddButton from "../../core/ui/AddButton.tsx";
-import ProductDialog from "./ProductDialog.tsx";
-import DeleteConfirmationDialog from "../../core/ui/DeleteConfirmationDialog.tsx";
-import ProductCards from "./ProductCards.tsx";
+import { Typography, Box, Alert, Snackbar, Stack, Button, CircularProgress } from "@mui/material";
+
+const AddButton = lazy(() => import("../../core/ui/AddButton.tsx"));
+const ProductDialog = lazy(() => import("./ProductDialog.tsx"));
+const DeleteConfirmationDialog = lazy(() => import("../../core/ui/DeleteConfirmationDialog.tsx"));
+const ProductCards = lazy(() => import("./ProductCards.tsx"));
 
 const defaultProduct: Product = {
     id: -1,
@@ -67,7 +68,6 @@ function ListProducts() {
         setApiError(null);
     }
 
-
     const handleSubmit = async () => {
         setApiError(null);
         try {
@@ -78,7 +78,6 @@ function ListProducts() {
                 setSnackbar({ open: true, message: 'Produkt erfolgreich aktualisiert!', severity: 'success' });
             } else {
                 responseProduct = await createProduct(newProduct);
-
                 setProducts((prevProducts) => [...prevProducts, responseProduct]);
                 setSnackbar({ open: true, message: 'Produkt erfolgreich erstellt!', severity: 'success' });
             }
@@ -90,6 +89,7 @@ function ListProducts() {
             setSnackbar({ open: true, message: errorMsg, severity: 'error' });
         }
     };
+
     const handleContainerChange = (containerId: number | null) => {
         const foundContainer = containers.find(c => c.id === containerId) ?? undefined;
         setNewProduct({ ...newProduct, container: foundContainer });
@@ -145,53 +145,61 @@ function ListProducts() {
         }
     };
 
+    const LoadingFallback = () => (
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+            <CircularProgress />
+        </Box>
+    );
+
     return (
         <Box sx={{ p: { xs: 1, sm: 2, md: 3 } }}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3} spacing={2}>
-                <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>
-                    Produktverwaltung
-                </Typography>
-                <AddButton onClick={handleAdd} />
-            </Stack>
-
-            {loading ? (
-                <ProductCards isLoading={true} />
-            ) : apiError && products.length === 0 ? (
-                <Alert severity="error" sx={{ my: 2 }}>{apiError}</Alert>
-            ) : !loading && products.length === 0 ? (
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 6, textAlign: 'center' }}>
-                    <Typography variant="h6" color="text.secondary" gutterBottom>
-                        Noch keine Produkte angelegt.
+            <Suspense fallback={<LoadingFallback />}>
+                <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3} spacing={2}>
+                    <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>
+                        Produktverwaltung
                     </Typography>
-                    <Typography color="text.secondary" sx={{ mb: 2 }}>
-                        Fügen Sie Ihr erstes Produkt hinzu, um es hier zu sehen.
-                    </Typography>
-                    <Button variant="contained" onClick={handleAdd}>
-                        Erstes Produkt hinzufügen
-                    </Button>
-                </Box>
-            ) : (
-                <ProductCards products={products} onDelete={handleDeleteButtonClicked} onEdit={handleEdit} isLoading={false}/>
-            )}
+                    <AddButton onClick={handleAdd} />
+                </Stack>
 
-            <ProductDialog
-                open={isOpen}
-                edit={edit}
-                product={newProduct}
-                onClose={resetDialogState}
-                onSubmit={handleSubmit}
-                onChange={handleChange}
-                containers={containers}
-                onContainerChange={handleContainerChange}
-                apiError={apiError}
-                clearApiError={() => setApiError(null)}
-            />
+                {loading ? (
+                    <ProductCards isLoading={true} />
+                ) : apiError && products.length === 0 ? (
+                    <Alert severity="error" sx={{ my: 2 }}>{apiError}</Alert>
+                ) : !loading && products.length === 0 ? (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 6, textAlign: 'center' }}>
+                        <Typography variant="h6" color="text.secondary" gutterBottom>
+                            Noch keine Produkte angelegt.
+                        </Typography>
+                        <Typography color="text.secondary" sx={{ mb: 2 }}>
+                            Fügen Sie Ihr erstes Produkt hinzu, um es hier zu sehen.
+                        </Typography>
+                        <Button variant="contained" onClick={handleAdd}>
+                            Erstes Produkt hinzufügen
+                        </Button>
+                    </Box>
+                ) : (
+                    <ProductCards products={products} onDelete={handleDeleteButtonClicked} onEdit={handleEdit} isLoading={false}/>
+                )}
 
-            <DeleteConfirmationDialog
-                open={deleteConfirm}
-                onClose={() => setDeleteConfirm(false)}
-                onConfirm={handleDelete}
-            />
+                <ProductDialog
+                    open={isOpen}
+                    edit={edit}
+                    product={newProduct}
+                    onClose={resetDialogState}
+                    onSubmit={handleSubmit}
+                    onChange={handleChange}
+                    containers={containers}
+                    onContainerChange={handleContainerChange}
+                    apiError={apiError}
+                    clearApiError={() => setApiError(null)}
+                />
+
+                <DeleteConfirmationDialog
+                    open={deleteConfirm}
+                    onClose={() => setDeleteConfirm(false)}
+                    onConfirm={handleDelete}
+                />
+            </Suspense>
 
             {snackbar && (
                 <Snackbar

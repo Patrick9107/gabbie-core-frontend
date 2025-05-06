@@ -2,14 +2,13 @@ import { useState, ChangeEvent, useEffect, useCallback } from "react";
 import { Vehicle } from "../../domain/Vehicle.ts";
 import { VehicleStatus } from "../../domain/enums/VehicleStatus.ts";
 import { fetchVehicles, createVehicle, deleteVehicle, updateVehicle } from "../../infra/api/vehicleService.ts";
-import { Typography, Box, Alert, Snackbar, Stack, Button } from "@mui/material"; // Ensure all needed imports are here
+import { Typography, Box, Alert, Snackbar, Stack, Button } from "@mui/material";
 import AddButton from "../../core/ui/AddButton.tsx";
 import DeleteConfirmationDialog from "../../core/ui/DeleteConfirmationDialog.tsx";
-import VehicleDialog from "./VehicleDialog.tsx"; // Assuming this exists/will be updated
+import VehicleDialog from "./VehicleDialog.tsx";
 import VehicleCards from "./VehicleCards.tsx";
-import AddressDialog from "../vehicle/VehicleAddressDialog.tsx"; // Keep AddressDialog import
+import AddressDialog from "../vehicle/VehicleAddressDialog.tsx";
 
-// Define default vehicle state
 const defaultVehicle: Vehicle = {
     id: -1,
     licensePlate: "",
@@ -28,10 +27,8 @@ function VehicleList() {
     const [loading, setLoading] = useState(true);
     const [apiError, setApiError] = useState<string | null>(null);
     const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' | 'info' } | null>(null);
-    // State for Address Dialog (moved from VehicleCards)
     const [selectedRouteId, setSelectedRouteId] = useState<number | null>(null);
 
-    // Memoized data loading function
     const loadData = useCallback(async () => {
         setLoading(true);
         setApiError(null);
@@ -42,32 +39,27 @@ function VehicleList() {
             console.error("Fehler beim Laden der Fahrzeuge:", err);
             const errorMsg = err.message || "Fahrzeuge konnten nicht geladen werden.";
             setApiError(errorMsg);
-            // setSnackbar({ open: true, message: errorMsg, severity: 'error' }); // Optional: Show error on initial load
         } finally {
             setLoading(false);
         }
     }, []);
 
-    // Effect for initial load and setting document title
     useEffect(() => {
         loadData();
         document.title = "Fahrzeuge";
     }, [loadData]);
 
-    // Handler to close snackbar
     const handleCloseSnackbar = () => {
         setSnackbar(null);
     };
 
-    // Function to reset dialog state
     const resetDialogState = () => {
         setOpen(false);
         setEdit(false);
         setNewVehicle(defaultVehicle);
-        setApiError(null); // Clear API error when closing dialog
+        setApiError(null);
     };
 
-    // Handle form submission (Create/Update)
     const handleSubmit = async () => {
         setApiError(null);
         // Add validation call here if needed, before API call
@@ -88,30 +80,26 @@ function VehicleList() {
                 setVehicles((prev) => [...prev, responseVehicle]);
                 setSnackbar({ open: true, message: 'Fahrzeug erfolgreich erstellt!', severity: 'success' });
             }
-            resetDialogState(); // Close dialog on success
+            resetDialogState();
         } catch (error: any) {
             console.error("Fehler beim Speichern des Fahrzeugs:", error);
             const errorMsg = error.message || "Fahrzeug konnte nicht gespeichert werden.";
-            setApiError(errorMsg); // Show error in dialog
-            setSnackbar({ open: true, message: errorMsg, severity: 'error' }); // Show global error feedback
-            // Keep dialog open on error
+            setApiError(errorMsg);
+            setSnackbar({ open: true, message: errorMsg, severity: 'error' });
         }
     };
 
-    // Handler for opening Add dialog
     const handleAdd = () => {
         resetDialogState();
         setOpen(true);
     };
 
-    // Handler for clicking delete button on a card
     const handleDeleteButtonClicked = (id: number) => {
         setDeleteConfirm(true);
         setVehicleToDelete(id);
         setApiError(null);
     };
 
-    // Handler for confirming deletion
     const handleDelete = async () => {
         if (vehicleToDelete !== null) {
             setApiError(null);
@@ -122,7 +110,7 @@ function VehicleList() {
             } catch (error: any) {
                 console.error("Fehler beim Löschen des Fahrzeugs:", error);
                 const errorMsg = error.message || "Fahrzeug konnte nicht gelöscht werden.";
-                setApiError(errorMsg); // Set potential error state
+                setApiError(errorMsg);
                 setSnackbar({ open: true, message: errorMsg, severity: 'error' });
             } finally {
                 setDeleteConfirm(false);
@@ -131,15 +119,12 @@ function VehicleList() {
         }
     };
 
-    // Handle input changes in the dialog
     const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        // Handle specific type conversions if needed (e.g., capacity)
         const newValue = name === 'capacity' ? parseInt(value, 10) || 0 : value;
         setNewVehicle({ ...newVehicle, [name]: newValue });
     };
 
-    // Handler for clicking edit button on a card
     const handleEdit = (id: number) => {
         const editableVehicle = vehicles.find((vehicle) => vehicle.id === id);
         if (editableVehicle) {
@@ -153,20 +138,17 @@ function VehicleList() {
         }
     };
 
-    // Handler for showing addresses (sets state to open AddressDialog)
     const handleShowAddresses = (routeId: number) => {
         setSelectedRouteId(routeId);
     };
 
-    // Handler for closing the AddressDialog
     const handleCloseAddressDialog = () => {
         setSelectedRouteId(null);
     };
 
 
     return (
-        <Box sx={{ p: { xs: 1, sm: 2, md: 3 } }}> {/* Consistent Padding */}
-            {/* Consistent Header */}
+        <Box sx={{ p: { xs: 1, sm: 2, md: 3 } }}>
             <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3} spacing={2}>
                 <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>
                     Fahrzeugverwaltung
@@ -174,7 +156,6 @@ function VehicleList() {
                 <AddButton onClick={handleAdd} />
             </Stack>
 
-            {/* Conditional Rendering Logic */}
             {loading ? (
                 <VehicleCards isLoading={true} />
             ) : apiError && vehicles.length === 0 ? (
@@ -196,7 +177,7 @@ function VehicleList() {
                     vehicles={vehicles}
                     onDelete={handleDeleteButtonClicked}
                     onEdit={handleEdit}
-                    onShowAddresses={handleShowAddresses} // Pass handler down
+                    onShowAddresses={handleShowAddresses}
                     isLoading={false}
                 />
             )}
@@ -210,14 +191,12 @@ function VehicleList() {
                 onChange={handleChange}
             />
 
-            {/* Delete Confirmation */}
             <DeleteConfirmationDialog
                 open={deleteConfirm}
                 onClose={() => setDeleteConfirm(false)}
                 onConfirm={handleDelete}
             />
 
-            {/* Address Display Dialog (conditionally rendered) */}
             {selectedRouteId !== null && (
                 <AddressDialog
                     open={selectedRouteId !== null}
@@ -226,7 +205,6 @@ function VehicleList() {
                 />
             )}
 
-            {/* Snackbar for Feedback */}
             {snackbar && (
                 <Snackbar
                     open={snackbar.open}
