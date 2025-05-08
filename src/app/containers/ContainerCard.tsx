@@ -4,14 +4,11 @@ import {
     CardContent,
     CardHeader,
     Typography,
-    Tooltip,
-    IconButton
 } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
 import { Container } from "../../domain/Container.ts";
 import { useTheme } from '@mui/material/styles';
 import React from "react";
+import SmallIconButton from "../../core/ui/SmallIconButton.tsx";
 
 interface Props {
     container: Container;
@@ -58,16 +55,8 @@ const ContainerCard = ({ container, onDelete, onEdit }: Props) => {
                 }
                 action={
                     <Box className="container-card-actions" sx={{ opacity: { xs: 1, md: 0 }, transition: 'opacity 0.2s' }}>
-                        <Tooltip title="Bearbeiten">
-                            <IconButton size="small" onClick={handleEditClick}>
-                                <EditIcon fontSize="small" />
-                            </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Löschen">
-                            <IconButton size="small" onClick={handleDeleteClick}>
-                                <DeleteIcon color="error" fontSize="small" />
-                            </IconButton>
-                        </Tooltip>
+                        <SmallIconButton onClick={handleEditClick} toolTip={"Bearbeiten"} />
+                        <SmallIconButton onClick={handleDeleteClick} toolTip={"Löschen"} color={"error"} />
                     </Box>
                 }
                 sx={{ pb: 0 }}

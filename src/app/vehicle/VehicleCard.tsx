@@ -6,16 +6,13 @@ import {
     CardMedia,
     Typography,
     Stack,
-    Tooltip,
-    IconButton,
     Button
 } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { Vehicle } from "../../domain/Vehicle.ts";
 import { useTheme } from '@mui/material/styles';
 import React from "react";
+import SmallIconButton from "../../core/ui/SmallIconButton.tsx";
 
 interface Props {
     vehicle: Vehicle;
@@ -70,16 +67,8 @@ const VehicleCard = ({ vehicle, onDelete, onEdit, onShowAddresses }: Props) => {
                 }
                 action={
                     <Box className="vehicle-card-actions" sx={{ opacity: { xs: 1, md: 0 }, transition: 'opacity 0.2s' }}>
-                        <Tooltip title="Bearbeiten">
-                            <IconButton size="small" onClick={handleEditClick}>
-                                <EditIcon fontSize="small" />
-                            </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Löschen">
-                            <IconButton size="small" onClick={handleDeleteClick}>
-                                <DeleteIcon color="error" fontSize="small" />
-                            </IconButton>
-                        </Tooltip>
+                        <SmallIconButton onClick={handleEditClick} toolTip={"Bearbeiten"} />
+                        <SmallIconButton onClick={handleDeleteClick} toolTip={"Löschen"} color={"error"} />
                     </Box>
                 }
                 sx={{ pb: 0 }}

@@ -102,12 +102,6 @@ function ListOrders() {
                 quantity: value.quantity
             }));
 
-        if (!newOrder.address?.trim() || !newOrder.phoneNumber?.trim() || mappedOrderItems.length === 0) {
-            setApiError("Bitte füllen Sie Adresse, Telefonnummer aus und fügen Sie Produkte hinzu.");
-            setSnackbar({open: true, message: "Bitte Pflichtfelder ausfüllen und Produkte hinzufügen.", severity: 'error'});
-            return;
-        }
-
         const updatedOrder = {
             ...newOrder,
             orderItems: mappedOrderItems as unknown as OrderItem[],

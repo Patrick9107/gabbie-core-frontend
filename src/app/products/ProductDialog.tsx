@@ -12,10 +12,15 @@ import {
     FormControl,
     InputLabel,
     Stack,
-    Alert
+    Alert,
+    Box,
+    Typography,
+    SelectChangeEvent
 } from "@mui/material";
 import { ChangeEvent, useState, useEffect } from "react";
 import { Container } from "../../domain/Container.ts";
+import EditIcon from '@mui/icons-material/Edit';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 
 interface Props {
     open: boolean;
@@ -43,17 +48,17 @@ const noErrors: ErrorState = {
 };
 
 function ProductDialog({
-                           open,
-                           edit,
-                           product,
-                           onClose,
-                           onSubmit,
-                           onChange,
-                           onContainerChange,
-                           containers,
-                           apiError,
-                           clearApiError
-                       }: Props) {
+                                 open,
+                                 edit,
+                                 product,
+                                 onClose,
+                                 onSubmit,
+                                 onChange,
+                                 onContainerChange,
+                                 containers,
+                                 apiError,
+                                 clearApiError
+                             }: Props) {
 
     const [errors, setErrors] = useState<ErrorState>(noErrors);
 
@@ -69,10 +74,25 @@ function ProductDialog({
     const validateForm = () => {
         const newErrors: ErrorState = {};
         if (!product.name?.trim()) newErrors.name = "Name ist erforderlich";
-        const priceNum = Number(product.price);
-        const weightNum = Number(product.weight);
-        if (isNaN(priceNum) || priceNum <= 0) newErrors.price = "Preis muss eine Zahl größer 0 sein";
-        if (isNaN(weightNum) || weightNum <= 0) newErrors.weight = "Gewicht muss eine Zahl größer 0 sein";
+
+        const priceStr = String(product.price).replace(',', '.');
+        const weightStr = String(product.weight).replace(',', '.');
+
+        const priceNum = Number(priceStr);
+        const weightNum = Number(weightStr);
+
+        if (String(product.price).trim() === "") {
+            newErrors.price = "Preis ist erforderlich";
+        } else if (isNaN(priceNum) || priceNum <= 0) {
+            newErrors.price = "Preis muss eine positive Zahl sein";
+        }
+
+        if (String(product.weight).trim() === "") {
+            newErrors.weight = "Gewicht ist erforderlich";
+        } else if (isNaN(weightNum) || weightNum <= 0) {
+            newErrors.weight = "Gewicht muss eine positive Zahl sein";
+        }
+
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -89,50 +109,77 @@ function ProductDialog({
         }
     };
 
+    const dialogTitleText = edit ? "Produkt bearbeiten" : "Neues Produkt erstellen";
+    const TitleIconComponent = edit ? EditIcon : AddCircleOutlineIcon;
+
     return (
-        <Dialog open={open} onClose={handleDialogClose} maxWidth="sm" fullWidth>
-            <DialogTitle sx={{ fontWeight: 'medium' }}>
-                {edit ? "Produkt bearbeiten" : "Neues Produkt erstellen"}
+        <Dialog
+            open={open}
+            onClose={handleDialogClose}
+            maxWidth="sm"
+            fullWidth
+            slotProps={{
+                paper: {
+                    sx: {
+                        borderRadius: "12px",
+                        boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)"
+                    }
+                }
+            }}
+        >
+            <DialogTitle sx={{ pt: 3, pb: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 1 }}>
+                    <TitleIconComponent sx={{ fontSize: 36, color: "primary.main" }} />
+                    <Typography variant="h6" component="div" sx={{ fontWeight: "bold" }}>
+                        {dialogTitleText}
+                    </Typography>
+                </Box>
             </DialogTitle>
-            <DialogContent>
+            <DialogContent sx={{ pt: 2, pb: 2}}>
                 {apiError && (
-                    <Alert severity="error" sx={{ mb: 2 }}>
+                    <Alert severity="error" sx={{ mb: 2, mt:1 }}>
                         {apiError}
                     </Alert>
                 )}
 
-                <Stack spacing={2} sx={{ mt: 1 }}>
+                <Stack spacing={2.5} sx={{ mt: apiError ? 0 : 1 }}>
                     <TextField
                         label="Name"
                         name="name"
                         fullWidth
-                        margin="dense"
                         onChange={onChange}
                         value={product.name || ''}
                         error={!!errors.name}
                         helperText={errors.name}
                         required
                         autoFocus
+                        variant="outlined"
+                        slotProps={{
+                            inputLabel: {
+                                shrink: true
+                            }
+                        }}
                     />
 
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2.5}>
                         <TextField
                             label="Preis"
                             name="price"
                             type="number"
-                            value={product.price}
+                            value={product.price || ''}
                             fullWidth
-                            margin="dense"
                             onChange={onChange}
                             error={!!errors.price}
                             helperText={errors.price}
                             required
+                            variant="outlined"
                             slotProps={{
-                                input: {
-                                    endAdornment: <InputAdornment position="end">€</InputAdornment>
+                                inputLabel: {
+                                    shrink: true
                                 },
-                                htmlInput: {
-                                    step: "0.01", min: "0.01"
+                                input: {
+                                    endAdornment: <InputAdornment position="end">€</InputAdornment>,
+                                    inputProps: { step: "0.01", min: "0.01" }
                                 }
                             }}
                         />
@@ -140,19 +187,20 @@ function ProductDialog({
                             label="Gewicht"
                             name="weight"
                             type="number"
-                            value={product.weight}
+                            value={product.weight || ''}
                             fullWidth
-                            margin="dense"
                             onChange={onChange}
                             error={!!errors.weight}
                             helperText={errors.weight}
                             required
+                            variant="outlined"
                             slotProps={{
-                                input: {
-                                    endAdornment: <InputAdornment position="end">kg</InputAdornment>
+                                inputLabel: {
+                                    shrink: true
                                 },
-                                htmlInput: {
-                                    step: "0.01", min: "0.01"
+                                input: {
+                                    endAdornment: <InputAdornment position="end">kg</InputAdornment>,
+                                    inputProps: { step: "0.01", min: "0.01" }
                                 }
                             }}
                         />
@@ -164,32 +212,43 @@ function ProductDialog({
                         multiline
                         rows={3}
                         fullWidth
-                        margin="dense"
                         onChange={onChange}
+                        variant="outlined"
+                        slotProps={{
+                            inputLabel: {
+                                shrink: true
+                            }
+                        }}
                     />
 
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2.5}>
                         <TextField
                             label="Bild URL"
                             name="imageUrl"
                             value={product.imageUrl || ''}
                             fullWidth
-                            margin="dense"
                             onChange={onChange}
                             type="url"
+                            variant="outlined"
+                            slotProps={{
+                                inputLabel: {
+                                    shrink: true
+                                }
+                            }}
                         />
-                        <FormControl fullWidth margin="dense">
-                            <InputLabel id="container-select-label">Behälter</InputLabel>
+                        <FormControl fullWidth variant="outlined">
+                            <InputLabel id="container-select-label" shrink={true}>Behälter</InputLabel>
                             <Select
                                 labelId="container-select-label"
                                 label="Behälter"
                                 value={product.container?.id ?? "none"}
-                                onChange={(e) =>
+                                onChange={(e: SelectChangeEvent<number | "none">) =>
                                     onContainerChange(e.target.value === "none" ? null : Number(e.target.value))
                                 }
+                                displayEmpty
                             >
                                 <MenuItem value="none">
-                                    <em>Keiner</em>
+                                    <em>Keinen auswählen</em>
                                 </MenuItem>
                                 {containers.map((container) => (
                                     <MenuItem key={container.id} value={container.id}>
@@ -201,11 +260,29 @@ function ProductDialog({
                     </Stack>
                 </Stack>
             </DialogContent>
-            <DialogActions sx={{ padding: "16px 24px" }}>
-                <Button onClick={handleDialogClose} color="inherit">
+            <DialogActions
+                sx={{
+                    justifyContent: "flex-end",
+                    paddingBottom: "24px",
+                    paddingTop: "16px",
+                    paddingX: "24px",
+                    gap: "12px"
+                }}
+            >
+                <Button
+                    onClick={handleDialogClose}
+                    variant="outlined"
+                    color="secondary"
+                    sx={{ borderRadius: "8px", textTransform: 'none', borderColor: 'grey.400', color: 'text.primary' }}
+                >
                     Abbrechen
                 </Button>
-                <Button onClick={handleDialogSubmit} variant="contained" color="primary">
+                <Button
+                    onClick={handleDialogSubmit}
+                    variant="contained"
+                    color="primary"
+                    sx={{ borderRadius: "8px", textTransform: 'none' }}
+                >
                     {edit ? "Änderungen speichern" : "Produkt erstellen"}
                 </Button>
             </DialogActions>

@@ -160,33 +160,33 @@ const OrderTable = ({ orders, onEdit, onDelete }: Props) => {
     };
 
     const headerCellSx = useMemo(() => ({
-        py: 1.5, // Beibehaltung der reduzierten Polsterung
-        backgroundColor: '#3d9970', // Spezifische grüne Farbe hier einsetzen
-        color: '#ffffff', // Explizites Weiß für Text
+        py: 1.5,
+        backgroundColor: '#3d9970',
+        color: '#ffffff',
         fontWeight: 'bold',
         whiteSpace: 'nowrap',
         cursor: 'pointer',
         '& .MuiTableSortLabel-root': {
-            color: '#ffffff !important', // Explizites Weiß für Sortier-Label
+            color: '#ffffff !important',
             '&:hover': {
-                color: '#ffffff', // Explizites Weiß beim Hover
+                color: '#ffffff',
             },
             '&.Mui-active': {
-                color: '#ffffff', // Explizites Weiß bei Aktivität
+                color: '#ffffff',
             }
         },
         '& .MuiTableSortLabel-icon': {
-            color: '#ffffff !important', // Explizites Weiß für Sortier-Icon
+            color: '#ffffff !important',
         }
     }), [theme]);
 
     const nonSortableHeaderCellSx = useMemo(() => ({
         py: 1,
-        backgroundColor: '#3d9970', // Spezifische grüne Farbe hier einsetzen
-        color: '#ffffff', // Explizites Weiß für Text
+        backgroundColor: '#3d9970',
+        color: '#ffffff',
         fontWeight: 'bold',
         whiteSpace: 'nowrap'
-    }), [theme]); // theme bleibt Abhängigkeit
+    }), [theme]);
 
     const sumSx = {
         borderBottom: "none",
@@ -346,22 +346,18 @@ const OrderTable = ({ orders, onEdit, onDelete }: Props) => {
                                                     />
                                                 )}
                                             </TableCell>
-                                            <TableCell sx={{ position: 'relative', textAlign: 'center', px: 1 }}> {/* Position relative für absolute Kindelemente & Zentrierung */}
+                                            <TableCell sx={{ position: 'relative', textAlign: 'center', px: 1 }}>
 
-                                                {/* Warn-Icon: Absolut positioniert, links */}
                                                 {uncompletedOrdersMap.has(order.id) && !selecting && (
                                                     <Tooltip title="Bestellung unvollständig (fehlende Adresse, Telefonnr., Produkte oder Lieferdatum)">
-                                                        {/* Box dient als Container für die absolute Positionierung */}
                                                         <Box
                                                             sx={{
                                                                 position: 'absolute',
-                                                                left: theme.spacing(1), // Abstand vom linken Rand (anpassen bei Bedarf)
-                                                                top: '50%', // Vertikal zentrieren
-                                                                transform: 'translateY(-50%)', // Feinjustierung für vertikale Mitte
-                                                                display: 'inline-flex', // Stellt sicher, dass das Icon richtig ausgerichtet ist
-                                                                color: theme.palette.warning.main, // Warnfarbe
-                                                                // Verhindert Klicks auf das Icon, damit der Zeilenklick funktioniert (optional)
-                                                                // pointerEvents: 'none',
+                                                                left: theme.spacing(1),
+                                                                top: '50%',
+                                                                transform: 'translateY(-50%)',
+                                                                display: 'inline-flex',
+                                                                color: theme.palette.warning.main,
                                                             }}
                                                         >
                                                             <WarningAmberIcon fontSize="small" />
@@ -373,12 +369,10 @@ const OrderTable = ({ orders, onEdit, onDelete }: Props) => {
                                                     <IconButton
                                                         size="small"
                                                         onClick={(e) => { e.stopPropagation(); toggleRow(order.id); }}
-                                                        // Optional: aria-controls/expanded für bessere Barrierefreiheit hinzufügen
                                                     >
                                                         {openRows.get(order.id) ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
                                                     </IconButton>
                                                 )}
-                                                {/* Wenn selecting true ist, wird hier nichts gerendert, der Platz bleibt aber zentriert */}
 
                                             </TableCell>
                                             <TableCell>{order.phoneNumber || '-'}</TableCell>

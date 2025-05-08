@@ -54,7 +54,7 @@ function VehicleList() {
     };
 
     const resetDialogState = () => {
-        setOpen(false);
+        setOpen(prevState => !prevState);
         setEdit(false);
         setNewVehicle(defaultVehicle);
         setApiError(null);

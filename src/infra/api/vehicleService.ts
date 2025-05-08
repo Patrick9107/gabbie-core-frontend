@@ -7,7 +7,6 @@ const VEHICLES_URL = `${API_BASE_URL}/Vehicle`;
 export const fetchVehicles = async (): Promise<Vehicle[]> => {
     try {
         const response = await axios.get<Vehicle[]>(VEHICLES_URL);
-        console.log(response);
         return response.data;
     } catch (error) {
         handleError(error);
