@@ -56,7 +56,7 @@ const HistoryPage: React.FC = () => {
                                     <TableCell>{route.id}</TableCell>
                                     <TableCell>{new Date(route.startTime).toLocaleString()}</TableCell>
                                     <TableCell>{new Date(route.endTime).toLocaleString()}</TableCell>
-                                    <TableCell>{route.totalDistance}</TableCell>
+                                    <TableCell>{Math.ceil(route.totalDistance * 10) / 10}</TableCell>
                                     <TableCell>{Math.round(route.totalDuration / 60)}</TableCell>
                                     <TableCell>
                                         <Button

@@ -7,8 +7,8 @@ import { Box, Typography, Dialog, DialogActions, DialogContent, DialogTitle, But
 import { Order } from "../../domain/Order.ts";
 import { Stop } from "../../domain/Stop.ts";
 import { useLocation } from "react-router-dom";
-import AddressList from "./AddressList";
 import { handleGetRoute } from "./RouteUtils.tsx";
+import RouteSplit from "./RouteSplit.tsx";
 
 interface RouteState {
     origin: string;
@@ -38,11 +38,6 @@ const RoutesPage: React.FC = () => {
         document.title = "Routenplanung";
     }, []);
 
-    const handleExportToGoogleMaps = (address: string) => {
-        const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
-        window.open(url, "_blank");
-    };
-
     const handleCloseDialog = () => {
         setOpenDialog(false);
     };
@@ -58,17 +53,9 @@ const RoutesPage: React.FC = () => {
         setOpenDialog(false);
     };
 
-    const handleStatusChange = (index: number, newStatus: string) => {
-        if (!routeData) return;
-
-        const updatedStops = [...routeData.rawStops];
-        updatedStops[index].status = newStatus;
-
-        setRouteData({ ...routeData, rawStops: updatedStops });
-    };
-
     const fetchRouteData = async (orders: Order[]) => {
         try {
+            await new Promise(resolve => setTimeout(resolve, 10000));
             const result = await handleGetRoute(orders, "Reisenberg");
             setRouteData(result);
         } catch (error) {
@@ -93,12 +80,7 @@ const RoutesPage: React.FC = () => {
                     <SaveRoute routeData={routeData} />
                 </Box>
             </Box>
-            <AddressList
-                stops={routeData?.rawStops}
-                handleStatusChange={handleStatusChange}
-                handleExportToGoogleMaps={handleExportToGoogleMaps}
-            />
-            
+
             <Dialog open={openErrorDialog} onClose={() => setOpenErrorDialog(false)}>
                 <DialogTitle>Fehler bei der Routenberechnung</DialogTitle>
                 <DialogContent>
@@ -110,7 +92,10 @@ const RoutesPage: React.FC = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
-            
+
+            {initialOrders.length > 0 && (
+                <RouteSplit orders={initialOrders} fixedStartAddress="Reisenberg" />
+            )}
             <RouteDialog open={openDialog} stop={selectedStop} onClose={handleCloseDialog} onSave={handleDialogSave} />
         </Box>
     );

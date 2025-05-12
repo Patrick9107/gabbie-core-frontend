@@ -1,6 +1,7 @@
 ﻿import React, { useState, useEffect } from "react";
 import { GoogleMap, LoadScript, DirectionsRenderer, Marker } from "@react-google-maps/api";
-import { Button } from '@mui/material';
+import { Fab, Tooltip } from '@mui/material';
+import RefreshIcon from '@mui/icons-material/Refresh';
 
 const GOOGLE_MAPS_API_KEY = "AIzaSyApPuaS2JBlsXJpN7wvGzQEXK5w9nlUgE0";
 const containerStyle = {
@@ -11,7 +12,7 @@ const containerStyle = {
 const MapComponent = ({ routeData }: { routeData: any }) => {
     const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
     const [userLocation, setUserLocation] = useState<google.maps.LatLng | null>(null);
-    const [reloadMap, setReloadMap] = useState<boolean>(false);  
+    const [reloadMap, setReloadMap] = useState<boolean>(false);
 
     const fixedOrigin = "Heldenpl. 23, 2440 Reisenberg";  // das ist scuffed
 
@@ -37,8 +38,7 @@ const MapComponent = ({ routeData }: { routeData: any }) => {
                 }
             }
         );
-    }, [reloadMap]);
-
+    }, [reloadMap, routeData]); // Füge routeData als Abhängigkeit hinzu
 
     useEffect(() => {
         const watchId = navigator.geolocation.watchPosition(
@@ -54,23 +54,8 @@ const MapComponent = ({ routeData }: { routeData: any }) => {
         return () => navigator.geolocation.clearWatch(watchId);
     }, []);
 
-    const handleExportToGoogleMaps = () => {
-        if (!routeData) return;
-
-        const destination = encodeURIComponent(routeData.destination);
-
-        const waypoints = routeData.waypoints
-            .map((wp: { location: string }) => encodeURIComponent(wp.location))
-            .slice(0, 9)
-            .join('/');
-
-        const finalRoute = `https://www.google.com/maps/dir/${encodeURIComponent(fixedOrigin)}/${waypoints}/${destination}`;
-
-        window.open(finalRoute, '_blank');
-    };
-
     const handleReloadMap = () => {
-        setReloadMap(true);  
+        setReloadMap(true);
     };
 
     return (
@@ -88,23 +73,16 @@ const MapComponent = ({ routeData }: { routeData: any }) => {
                 )}
             </GoogleMap>
 
-            <Button
-                variant="contained"
-                color="primary"
-                onClick={handleExportToGoogleMaps}
-                sx={{ position: 'absolute', top: '10px', right: '10px' }}
-            >
-                Open in Google Maps
-            </Button>
-
-            <Button
-                variant="contained"
-                color="secondary"
-                onClick={handleReloadMap}
-                sx={{ position: 'absolute', top: '50px', right: '10px' }}
-            >
-                Reload Map
-            </Button>
+            <Tooltip title="Karte neu laden">
+                <Fab
+                    color="primary"
+                    aria-label="reload"
+                    onClick={handleReloadMap}
+                    sx={{ position: 'absolute', bottom: '20px', right: '20px' }}
+                >
+                    <RefreshIcon />
+                </Fab>
+            </Tooltip>
         </LoadScript>
     );
 };

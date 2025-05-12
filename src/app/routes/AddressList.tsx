@@ -1,149 +1,228 @@
 ﻿import React, { useState, useEffect } from "react";
-import { Box, Typography, FormControl, InputLabel, Select, MenuItem, Button } from "@mui/material";
+import {
+    Box,
+    Typography,
+    Paper,
+    Card,
+    CardContent,
+    IconButton,
+    Badge,
+    List,
+    TextField,
+    Button,
+    ListItem
+} from "@mui/material";
+import AddIcon from '@mui/icons-material/Add';
+import RemoveIcon from '@mui/icons-material/Remove';
+import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import ReceiptOutlinedIcon from '@mui/icons-material/ReceiptOutlined';
 import { Stop } from "../../domain/Stop.ts";
-import DetailsDialog from "./AddressDetails.tsx";
-import BillingDialog from "./BillingDialogue.tsx";
 
 interface AddressListProps {
     stops: Stop[] | undefined;
     handleStatusChange: (index: number, status: string) => void;
     handleExportToGoogleMaps: (address: string) => void;
+    onSaveTotalQuantities: (routeId: number, updatedQuantities: { productId: number; quantity: number }[]) => void;
+    routeId: number;
+    showLoadList: boolean;
+    onOpenDetailsDialog: (stop: Stop) => void;
+    onOpenBillingDialog: (stop: Stop) => void;
+    routeReserveStock: { productId: number; quantity: number }[] | undefined; // Neuer Prop für die initiale Reserve
 }
 
-const AddressList: React.FC<AddressListProps> = ({ stops, handleStatusChange, handleExportToGoogleMaps }) => {
-    const [selectedStop, setSelectedStop] = useState<Stop | null>(null);
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const [billingDialogOpen, setBillingDialogOpen] = useState(false);
-    const [orderSummary, setOrderSummary] = useState<any[]>([]);
+interface TotalProduct {
+    productId: number;
+    name: string;
+    requiredQuantity: number;
+    reserveQuantity: number;
+}
+
+const AddressList: React.FC<AddressListProps> = ({
+                                                     stops,
+                                                     handleExportToGoogleMaps,
+                                                     onSaveTotalQuantities,
+                                                     routeId,
+                                                     showLoadList,
+                                                     onOpenDetailsDialog,
+                                                     onOpenBillingDialog,
+                                                     routeReserveStock
+                                                 }) => {
+    const [reserveQuantities, setReserveQuantities] = useState<{ [productId: number]: number }>({});
 
     useEffect(() => {
         if (!stops) return;
 
-        const summary: any[] = [];
-        stops.forEach((stop) => {
-            if (stop?.order?.orderItems) {
-                stop.order.orderItems.forEach((item: any) => {
-                    const existingItem = summary.find((s: any) => s.productId === item.product.id);
-                    if (existingItem) {
-                        existingItem.quantity += item.quantity;
-                    } else {
-                        summary.push({
-                            productId: item.product.id,
-                            name: item.product.name,
-                            quantity: item.quantity,
-                            price: item.product.price,
-                        });
-                    }
-                });
-            }
+        // Initialisiere die Reserve mit den Werten vom Backend, falls vorhanden
+        if (routeReserveStock) {
+            const initialReserveFromBackend: { [productId: number]: number } = {};
+            routeReserveStock.forEach(item => {
+                initialReserveFromBackend[item.productId] = item.quantity;
+            });
+            setReserveQuantities(initialReserveFromBackend);
+        } else {
+            setReserveQuantities({});
+        }
+    }, [stops, routeReserveStock]);
+
+    const handleIncrementReserve = (productId: number) => {
+        setReserveQuantities(prev => ({
+            ...prev,
+            [productId]: (prev[productId] || 0) + 1,
+        }));
+    };
+
+    const handleDecrementReserve = (productId: number) => {
+        setReserveQuantities(prev => ({
+            ...prev,
+            [productId]: Math.max(0, (prev[productId] || 0) - 1),
+        }));
+    };
+
+    const handleReserveChange = (productId: number, event: React.ChangeEvent<HTMLInputElement>) => {
+        const value = parseInt(event.target.value);
+        console.log(`handleReserveChange: productId=<span class="math-inline">\{productId\}, value\=</span>{value}`);
+        setReserveQuantities(prev => {
+            const newState = {
+                ...prev,
+                [productId]: isNaN(value) ? 0 : value,
+            };
+            console.log("New State:", newState);
+            return newState;
         });
-        setOrderSummary(summary);
-    }, [stops]);
-
-    if (!stops || stops.length === 0) return <p></p>;
-
-    const handleOpenDialog = (stop: Stop) => {
-        setSelectedStop(stop);
-        setDialogOpen(true);
     };
 
-    const handleCloseDialog = () => {
-        setDialogOpen(false);
+    const handleSaveTotalQuantities = () => {
+        const updatedQuantities: { productId: number; quantity: number }[] = [];
+        for (const productId in reserveQuantities) {
+            if (Object.hasOwnProperty.call(reserveQuantities, productId)) {
+                const parsedProductId = parseInt(productId);
+                if (!isNaN(parsedProductId)) {
+                    updatedQuantities.push({
+                        productId: parsedProductId,
+                        quantity: reserveQuantities[productId] || 0,
+                    });
+                }
+            }
+        }
+        onSaveTotalQuantities(routeId, updatedQuantities);
     };
 
-    const handleOpenBillingDialog = (stop: Stop) => {
-        setSelectedStop(stop);
-        setBillingDialogOpen(true);
-    };
+    const getTotalProductsList = (): TotalProduct[] => {
+        const uniqueProducts: { [productId: number]: TotalProduct } = {};
+        
+        stops?.slice(1).forEach(stop => {
+            stop.order?.orderItems?.forEach((item: any) => {
+                const productId = item.product.id;
+                // das ist intended keine Sorge
+                // @ts-ignore
+                const reserveQuantity = routeReserveStock?.find(r => r.product.id === productId)?.quantity;
+                if (uniqueProducts[productId]) {
+                    uniqueProducts[productId].requiredQuantity += item.quantity;
+                    uniqueProducts[productId].reserveQuantity = reserveQuantity !== undefined ? reserveQuantity : 0; // Update reserveQuantity
+                } else {
+                    uniqueProducts[productId] = {
+                        productId: productId,
+                        name: item.product.name || 'Unbekanntes Produkt',
+                        requiredQuantity: item.quantity,
+                        reserveQuantity: reserveQuantity !== undefined ? reserveQuantity : 0, // Use the value from routeReserveStock
+                    };
+                }
+            });
+        });
 
-    const handleCloseBillingDialog = () => {
-        setBillingDialogOpen(false);
+        return Object.values(uniqueProducts);
     };
 
     return (
         <>
-            <Box sx={{ mt: 3, p: 2, border: "1px solid #ddd", borderRadius: "8px", backgroundColor: "#f9f9f9" }}>
-                <Typography variant="h5" sx={{ mb: 2 }}>
-                    Stopps auf der Route
-                </Typography>
-                {stops.slice(1).map((stop, index) => (
-                    <Box
-                        key={index}
-                        sx={{
-                            p: 2,
-                            mb: 1,
-                            border: "1px solid #ccc",
-                            borderRadius: "8px",
-                            backgroundColor: "#ffffff",
-                            boxShadow: "2px 2px 10px rgba(0, 0, 0, 0.1)",
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            gap: 2,
-                            minHeight: "80px",
-                        }}
-                    >
-                        <Box sx={{ flex: 2, minWidth: "200px", maxWidth: "350px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                            <Typography variant="h6">{stop.order.address}</Typography>
-                            <Typography variant="body2">Ankunft: {stop.arrival} min</Typography>
-                            <Typography variant="body2">Distanz: {stop.distance} km</Typography>
-                        </Box>
-
-                        <FormControl size="small" sx={{ minWidth: 100, flex: 1 }}>
-                            <InputLabel>Status</InputLabel>
-                            <Select
-                                value={stops[index + 1]?.status || ""}
-                                onChange={(e) => handleStatusChange(index + 1, e.target.value)}
-                            >
-                                <MenuItem value="pending">Pending</MenuItem>
-                                <MenuItem value="delivered">Delivered</MenuItem>
-                                <MenuItem value="canceled">Canceled</MenuItem>
-                                <MenuItem value="moved">Moved</MenuItem>
-                                <MenuItem value="notReachable">Not Reachable</MenuItem>
-                            </Select>
-                        </FormControl>
-
-                        <Box sx={{ display: "flex", gap: 1, flex: 2, justifyContent: "flex-end" }}>
-                            <Button variant="contained" color="success" onClick={() => handleOpenDialog(stop)}>
-                                Details
-                            </Button>
-                            <Button variant="contained" color="success" onClick={() => handleOpenBillingDialog(stop)}>
-                                Rechnung
-                            </Button>
-                            <Button variant="contained" color="success" onClick={() => handleExportToGoogleMaps(stop.order.address)}>
-                                Google Maps
-                            </Button>
-                        </Box>
-                    </Box>
-                ))}
-            </Box>
-            
-            <Box sx={{ mt: 3, p: 2, border: "1px solid #ddd", borderRadius: "8px", backgroundColor: "#f9f9f9" }}>
-                <Typography variant="h6" sx={{ mb: 2 }}>
-                    Bestellübersicht
-                </Typography>
-                {orderSummary.length > 0 ? (
-                    <ul>
-                        {orderSummary.map((item, index) => (
-                            <li key={index}>
-                                {item.name} - {item.quantity} x {item.price}€ = {(item.quantity * item.price).toFixed(2)}€
-                            </li>
-                        ))}
-                    </ul>
-                ) : (
-                    <p>Keine Bestellungen verfügbar.</p>
-                )}
-            </Box>
-            
-            {selectedStop && (
-                <DetailsDialog open={dialogOpen} handleClose={handleCloseDialog} stop={selectedStop} />
+            {!showLoadList && (
+                <Paper sx={{ mt: 3, p: 2, borderRadius: "8px", elevation: 2 }}>
+                    <Typography variant="h5" sx={{ mb: 2 }}>
+                        Stopps auf der Route
+                    </Typography>
+                    {stops?.slice(1).map((stop, index) => (
+                        <Card key={index} sx={{ mb: 2, borderRadius: "8px", boxShadow: 1 }}>
+                            <CardContent sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1.5 }}>
+                                    <Badge
+                                        badgeContent={stop?.status}
+                                        color={
+                                            stop?.status === "delivered" ? "success" :
+                                                stop?.status === "canceled" ? "error" :
+                                                    stop?.status === "moved" ? "warning" :
+                                                        stop?.status === "notReachable" ? "error" :
+                                                            "info"
+                                        }
+                                        sx={{ mr: 2 }}
+                                    />
+                                    <Typography variant="h6" sx={{ flexGrow: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                        {stop?.order?.address}
+                                    </Typography>
+                                </Box>
+                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                    <IconButton color="primary" onClick={() => handleExportToGoogleMaps(stop?.order?.address || "")} size="small">
+                                        <LocationOnOutlinedIcon />
+                                    </IconButton>
+                                    <IconButton color="primary" onClick={() => onOpenDetailsDialog(stop as Stop)} size="small">
+                                        <InfoOutlinedIcon />
+                                    </IconButton>
+                                    <IconButton color="primary" onClick={() => onOpenBillingDialog(stop as Stop)} size="small">
+                                        <ReceiptOutlinedIcon />
+                                    </IconButton>
+                                </Box>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </Paper>
             )}
-            
-            {selectedStop && (
-                <BillingDialog open={billingDialogOpen} handleClose={handleCloseBillingDialog} stop={selectedStop} />
+
+            {showLoadList && (
+                <Paper sx={{ mt: 3, p: 2, borderRadius: "8px", elevation: 2 }}>
+                    <Typography variant="h6" sx={{ mb: 2 }}>
+                        Ladeliste bearbeiten (Gesamt mit Reserve)
+                    </Typography>
+                    <List>
+                        {getTotalProductsList().map((product) => (
+                            <ListItem key={product.productId} sx={{ py: 0.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <Typography sx={{ width: '40%' }}>{product.name}</Typography>
+                                <Typography sx={{ width: '20%', textAlign: 'center', color: 'textSecondary' }}>
+                                    Benötigt: {product.requiredQuantity}
+                                </Typography>
+                                <Typography sx={{ width: '20%', textAlign: 'center', color: 'textSecondary' }}>
+                                    Reserve: {product.reserveQuantity}
+                                </Typography>
+                                <Box sx={{ display: 'flex', alignItems: 'center', width: '40%', justifyContent: 'flex-end' }}>
+                                    <IconButton size="small" onClick={() => handleDecrementReserve(product.productId)}>
+                                        <RemoveIcon fontSize="small" />
+                                    </IconButton>
+                                    <TextField
+                                        type="number"
+                                        size="small"
+                                        value={reserveQuantities[product.productId] || 0}
+                                        onChange={(e) => handleReserveChange(product.productId, e as React.ChangeEvent<HTMLInputElement>)}
+                                        inputProps={{ min: 0 }}
+                                        sx={{ width: 60, mx: 1, textAlign: 'center' }}
+                                    />
+                                    <IconButton size="small" onClick={() => handleIncrementReserve(product.productId)}>
+                                        <AddIcon fontSize="small" />
+                                    </IconButton>
+                                    <Typography sx={{ ml: 1 }}>Reserve</Typography>
+                                </Box>
+                            </ListItem>
+                        ))}
+                        {getTotalProductsList().length === 0 && (
+                            <Typography>Keine Produkte in dieser Route.</Typography>
+                        )}
+                    </List>
+                    <Button variant="contained" color="primary" onClick={handleSaveTotalQuantities} sx={{ mt: 2 }}>
+                        Reservemengen speichern
+                    </Button>
+                </Paper>
             )}
         </>
     );
 };
 
 export default AddressList;
+

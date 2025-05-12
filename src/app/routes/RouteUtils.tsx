@@ -6,6 +6,8 @@ import { API_BASE_URL } from "../../../apiConfig.ts";
 
 const fetchRouteData = async (requestBody: any) => {
     try {
+        await new Promise(resolve => setTimeout(resolve, 10000));
+        
         const response = await fetch(`${API_BASE_URL}/Tour/createRouteWithAddress`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -28,7 +30,7 @@ export const handleGetRoute = async (orders: Order[], fixedStartAddress: string)
         const requestBody = {
             locations: [
                 { address: fixedStartAddress},
-                ...orders.map((order) => ({ address: order.address})), //servicetime wird im Backend gemacht
+                ...orders.map((order) => ({ address: order.address})), 
             ],
             parameters: [
                 {type: 'car'},

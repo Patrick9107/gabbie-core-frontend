@@ -9,51 +9,28 @@ export default function ExportToExcelButton({ routeData }: Props) {
     const handleExport = () => {
         try {
             const parsed = JSON.parse(routeData);
-            const rawStops = parsed.rawStops?.slice(1) || []; // Das ist nur da damit Reisenberg nicht drauf ist
-
-            const allProductNames = new Set<string>();
-
-            rawStops.forEach((stop: any) => {
-                (stop?.order?.orderItems || []).forEach((item: any) => {
-                    allProductNames.add(item.product.name);
-                });
-            });
-
-            const productList = Array.from(allProductNames);
+            const rawStops = parsed.rawStops?.slice(1) || [];
 
             const rows = rawStops.map((stop: any) => {
-                const row: any = {
+                return {
                     Adresse: stop.order?.address || "",
                     Telefonnummer: stop.order?.phoneNumber || "",
                     Notiz: stop.order?.note || "",
                     Lieferdatum: stop.order?.deliveryDate?.split("T")[0] || "",
                 };
-
-                productList.forEach((productName) => {
-                    row[productName] = 0;
-                });
-
-                (stop?.order?.orderItems || []).forEach((item: any) => {
-                    const name = item.product.name;
-                    row[name] = item.quantity;
-                });
-
-                return row;
             });
 
             const worksheet = XLSX.utils.json_to_sheet(rows);
 
-            // ⬆ Spaltenbreiten
-            const columnWidths = [
+            // Spaltenbreiten
+            worksheet["!cols"] = [
                 { wch: 30 }, // Adresse
                 { wch: 15 }, // Telefonnummer
-                ...productList.map(() => ({ wch: 12 })), // Produkte
                 { wch: 25 }, // Notiz
                 { wch: 15 }, // Lieferdatum
             ];
 
-            worksheet["!cols"] = columnWidths;
-            
+            // Kopfzeile fett
             const headerRange = XLSX.utils.decode_range(worksheet["!ref"]!);
             for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
                 const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
@@ -76,7 +53,7 @@ export default function ExportToExcelButton({ routeData }: Props) {
 
     return (
         <Button variant="contained" color="success" onClick={handleExport}>
-            Excel Export
+            Routenliste Export
         </Button>
     );
 }

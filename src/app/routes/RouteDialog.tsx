@@ -27,7 +27,7 @@ const RouteDialog: React.FC<RouteDialogProps> = ({ open, stop, onClose, onSave }
             </DialogContent>
             <DialogActions>
                 <Button onClick={onClose}>Abbrechen</Button>
-                <Button variant="contained" onClick={() => onSave(editedStop!)}>Speichern</Button>
+                <Button variant="contained" color="primary" onClick={() => onSave(editedStop!)}>Speichern</Button>
             </DialogActions>
         </Dialog>
     );

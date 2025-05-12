@@ -12,7 +12,7 @@ export default function ExportLadelisteButton({ routeData }: Props) {
             const rawStops = parsed.rawStops?.slice(1) || [];
 
             const allProductNames = new Set<string>();
-            const productWeights: Record<string, number> = {}; // Name → Einzelgewicht
+            const productWeights: Record<string, number> = {};
 
             rawStops.forEach((stop: any) => {
                 (stop.order?.orderItems || []).forEach((item: any) => {
@@ -22,13 +22,10 @@ export default function ExportLadelisteButton({ routeData }: Props) {
             });
 
             const productList = Array.from(allProductNames);
-
             const rows: any[] = [];
 
             rawStops.forEach((stop: any) => {
-                const row: any = {
-                    Adresse: stop.order?.address || "",
-                };
+                const row: any = {};
 
                 let totalWeight = 0;
 
@@ -50,7 +47,7 @@ export default function ExportLadelisteButton({ routeData }: Props) {
             });
 
             // Gesamtzeile für alle Produkte
-            const sumRow: any = { Adresse: "Gesamt (alle Adressen)" };
+            const sumRow: any = {};
             productList.forEach((name) => {
                 sumRow[name] = rows.reduce((acc, row) => acc + (row[name] || 0), 0);
             });
@@ -60,12 +57,11 @@ export default function ExportLadelisteButton({ routeData }: Props) {
             const worksheet = XLSX.utils.json_to_sheet(rows);
 
             worksheet["!cols"] = [
-                { wch: 30 }, // Adresse
                 ...productList.map(() => ({ wch: 18 })), // Produktspalten
                 { wch: 20 }, // Gesamtgewicht
             ];
 
-            // Erste Zeile fett + Schriftgröße
+            // Erste Zeile formatieren
             const range = XLSX.utils.decode_range(worksheet["!ref"]!);
             for (let col = range.s.c; col <= range.e.c; col++) {
                 const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
