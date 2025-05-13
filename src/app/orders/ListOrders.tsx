@@ -1,16 +1,18 @@
-import AddButton from "../../core/ui/AddButton.tsx";
-import { ChangeEvent, useEffect, useState, useCallback } from "react";
+import { ChangeEvent, useEffect, useState, useCallback, lazy, Suspense } from "react";
 import { Product } from "../../domain/Product.ts";
 import { fetchOrders, deleteOrder, createOrder, updateOrder } from "../../infra/api/orderService.ts";
 import { Dayjs } from "dayjs";
-import DeleteConfirmationDialog from "../../core/ui/DeleteConfirmationDialog.tsx";
-import OrderTable from "./OrderTable.tsx";
-import OrderDialog from "./OrderDialog.tsx";
 import { Typography, Box, CircularProgress, Alert, Snackbar, Stack } from "@mui/material";
 import { OrderResponse } from "../../domain/OrderResponse.ts";
 import { OrderItem } from "../../domain/OrderItem.ts";
 import { fetchProducts } from "../../infra/api/productService.ts";
-import OrderOverview from './OrderOverview.tsx';
+
+// Lazy-loaded Komponenten
+const AddButton = lazy(() => import("../../core/ui/AddButton.tsx"));
+const DeleteConfirmationDialog = lazy(() => import("../../core/ui/DeleteConfirmationDialog.tsx"));
+const OrderTable = lazy(() => import("./OrderTable.tsx"));
+const OrderDialog = lazy(() => import("./OrderDialog.tsx"));
+const OrderOverview = lazy(() => import('./OrderOverview.tsx'));
 
 const defaultOrder: OrderResponse = {
     id: -1,
@@ -27,6 +29,14 @@ const defaultOrder: OrderResponse = {
     createdAt: null,
     updatedAt: null,
 };
+
+// Fallback-Komponente für Suspense
+const LoadingFallback = () => (
+    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', p: 3 }}>
+        <CircularProgress />
+        <Typography sx={{ ml: 2 }}>Lade Komponenten...</Typography>
+    </Box>
+);
 
 function ListOrders() {
     const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -47,7 +57,8 @@ function ListOrders() {
         setLoading(true);
         setApiError(null);
         try {
-            const [fetchedOrders, fetchedProducts] = await Promise.all([
+
+            const [fetchedOrders, fetchedProducts]: [OrderResponse[], Product[]] = await Promise.all([
                 fetchOrders(),
                 fetchProducts()
             ]);
@@ -57,6 +68,7 @@ function ListOrders() {
             console.error("Failed to fetch data:", error);
             const errorMsg = error.message || "Daten konnten nicht geladen werden.";
             setApiError(errorMsg);
+            setSnackbar({ open: true, message: errorMsg, severity: 'error' });
         } finally {
             setLoading(false);
         }
@@ -96,35 +108,44 @@ function ListOrders() {
         setApiError(null);
 
         const mappedOrderItems = newOrderProducts
-            .filter(value => value !== null)
+            .filter(value => value !== null && value.product !== null && value.quantity > 0) // Sicherstellen, dass Produkt existiert und Menge > 0
             .map(value => ({
-                product: value.product,
+                productId: value.product!.id, // Non-null assertion, da oben gefiltert
                 quantity: value.quantity
             }));
 
-        const updatedOrder = {
-            ...newOrder,
-            orderItems: mappedOrderItems as unknown as OrderItem[],
-            orderSource: selectedOrderSource ?? 0
+        // Validierung: Sicherstellen, dass mindestens ein Artikel vorhanden ist, wenn nicht gerade ein leerer Entwurf bearbeitet wird
+        if (mappedOrderItems.length === 0 && !edit) { // Für neue Bestellungen prüfen
+            // Oder wenn edit=true und die ursprüngliche Bestellung auch keine Artikel hatte (was unwahrscheinlich sein sollte)
+            setApiError("Bitte fügen Sie mindestens ein Produkt zur Bestellung hinzu.");
+            setSnackbar({ open: true, message: "Bitte fügen Sie mindestens ein Produkt zur Bestellung hinzu.", severity: 'error' });
+            return;
         }
+
+
+        const orderPayload = { // Umbenannt, um Verwechslung mit newOrder (State) zu vermeiden
+            ...newOrder,
+            orderItems: mappedOrderItems as unknown as OrderItem[], // Die API erwartet hier wahrscheinlich productId, nicht das ganze Produktobjekt
+            orderSource: selectedOrderSource ?? newOrder.orderSource ?? 1 // Fallback für orderSource
+        };
 
         try {
             let response: OrderResponse;
             if (edit) {
-                response = await updateOrder(updatedOrder);
+                response = await updateOrder(orderPayload);
                 setOrders(prevState =>
                     prevState.map(order => order.id === response.id ? response : order)
                 );
                 setSnackbar({ open: true, message: "Bestellung erfolgreich aktualisiert!", severity: 'success'});
             } else {
-                response = await createOrder(updatedOrder);
+                response = await createOrder(orderPayload);
                 setOrders(prevState => [...prevState, response]);
                 setSnackbar({ open: true, message: "Bestellung erfolgreich erstellt!", severity: 'success'});
             }
             resetDialogState();
         } catch (error: any) {
             console.error("Fehler beim Speichern der Bestellung:", error);
-            const errorMsg = error.message || "Bestellung konnte nicht gespeichert werden.";
+            const errorMsg = error.response?.data?.message || error.message || "Bestellung konnte nicht gespeichert werden.";
             setApiError(errorMsg);
             setSnackbar({ open: true, message: errorMsg, severity: 'error' });
         }
@@ -143,7 +164,8 @@ function ListOrders() {
         if (order) {
             setNewOrder(order);
             const dialogOrderItems = order.orderItems.map(item => ({
-                product: availableProducts.find(p => p.id === item.product.id) ?? null,
+                // Annahme: item.product enthält das volle Produktobjekt oder zumindest die ID
+                product: availableProducts.find(p => p.id === (typeof item.product === 'number' ? item.product : item.product.id)) ?? null,
                 quantity: item.quantity
             })).filter(item => item.product !== null);
 
@@ -165,10 +187,11 @@ function ListOrders() {
                 await deleteOrder(orderToDelete);
                 setOrders(prevState => prevState.filter(o => o.id !== orderToDelete));
                 setSnackbar({ open: true, message: "Bestellung erfolgreich gelöscht!", severity: 'success'});
-            } catch (error: any) {
+            } catch (error: any)
+            {
                 console.error("Fehler beim Löschen der Bestellung:", error);
-                const errorMsg = error.message || "Bestellung konnte nicht gelöscht werden.";
-                setApiError(errorMsg);
+                const errorMsg = error.response?.data?.message || error.message || "Bestellung konnte nicht gelöscht werden.";
+                setApiError(errorMsg); // Nicht unbedingt nötig, da Snackbar die Info anzeigt
                 setSnackbar({ open: true, message: errorMsg, severity: 'error' });
             } finally {
                 setDeleteConfirm(false);
@@ -188,54 +211,64 @@ function ListOrders() {
 
     return (
         <Box sx={{ p: { xs: 1, sm: 2, md: 3 } }}>
-            <OrderOverview orders={orders} sxCustom={{ mb: 3 }} />
+            <Suspense fallback={<LoadingFallback />}>
+                <OrderOverview orders={orders} sxCustom={{ mb: 3 }} />
 
-            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3} spacing={2}>
-                <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>
-                    Bestellübersicht
-                </Typography>
-                <AddButton onClick={() => { resetDialogState(); setIsOpen(true); }} />
-            </Stack>
+                <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3} spacing={2}>
+                    <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>
+                        Bestellübersicht
+                    </Typography>
+                    <AddButton onClick={() => { resetDialogState(); setIsOpen(true); }} />
+                </Stack>
 
-            {loading ? (
-                <Box sx={{ display: 'flex', justifyContent: 'center', my: 5 }}>
-                    <CircularProgress />
-                </Box>
-            ) : apiError && orders.length === 0 ? (
-                <Alert severity="error" sx={{ my: 2 }}>{apiError}</Alert>
-            ) : (
-                <OrderTable
-                    orders={orders}
-                    onEdit={handleEditButtonClicked}
-                    onDelete={handleDeleteButtonClicked}
-                />
-            )}
+                {loading ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', my: 5 }}>
+                        <CircularProgress />
+                    </Box>
+                ) : apiError && orders.length === 0 ? ( // Zeige Fehler nur wenn keine Bestellungen da sind UND ein Fehler aufgetreten ist
+                    <Alert severity="error" sx={{ my: 2 }}>{apiError}</Alert>
+                ) : !loading && orders.length === 0 && !apiError ? ( // Eigene Meldung für "Keine Bestellungen"
+                    <Alert severity="info" sx={{ my: 2 }}>Noch keine Bestellungen vorhanden. Legen Sie Ihre erste Bestellung an!</Alert>
+                ) : (
+                    <OrderTable
+                        orders={orders}
+                        onEdit={handleEditButtonClicked}
+                        onDelete={handleDeleteButtonClicked}
+                    />
+                )}
 
-            <OrderDialog
-                open={isOpen}
-                edit={edit}
-                isProductDialogOpen={isProductDialogOpen}
-                onProductDialogClose={() => setIsProductDialogOpen(false)}
-                order={newOrder}
-                products={availableProducts}
-                onClose={handleCancel}
-                onSubmit={handleSubmit}
-                onChange={handleChange}
-                onDateChange={handleDateChange}
-                onOrderSourceChange={handleOrderSourceChange}
-                selectedOrderSource={selectedOrderSource}
-                onManageProductsClick={handleOpenProductDialog}
-                setOrderItems={handleSetOrderItems}
-                newOrderItems={newOrderProducts}
-                apiError={apiError}
-                clearApiError={() => setApiError(null)}
-            />
+                {isOpen && ( // Dialoge nur rendern, wenn sie offen sind, um Performance zu sparen
+                    <OrderDialog
+                        open={isOpen}
+                        edit={edit}
+                        isProductDialogOpen={isProductDialogOpen}
+                        onProductDialogClose={() => setIsProductDialogOpen(false)}
+                        order={newOrder}
+                        products={availableProducts}
+                        onClose={handleCancel}
+                        onSubmit={handleSubmit}
+                        onChange={handleChange}
+                        onDateChange={handleDateChange}
+                        onOrderSourceChange={handleOrderSourceChange}
+                        selectedOrderSource={selectedOrderSource}
+                        onManageProductsClick={handleOpenProductDialog}
+                        setOrderItems={handleSetOrderItems}
+                        newOrderItems={newOrderProducts}
+                        apiError={apiError}
+                        clearApiError={() => setApiError(null)}
+                    />
+                )}
 
-            <DeleteConfirmationDialog
-                open={deleteConfirm}
-                onClose={() => setDeleteConfirm(false)}
-                onConfirm={handleDelete}
-            />
+                {deleteConfirm && (
+                    <DeleteConfirmationDialog
+                        open={deleteConfirm}
+                        onClose={() => setDeleteConfirm(false)}
+                        onConfirm={handleDelete}
+                        title="Bestellung löschen"
+                        description={`Möchten Sie die Bestellung wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`}
+                    />
+                )}
+            </Suspense>
 
             {snackbar && (
                 <Snackbar
