@@ -26,14 +26,18 @@ export const fetchOrderById = async (id: number): Promise<Order | null> => {
 
 export const createOrder = async (order: OrderResponse): Promise<OrderResponse> => {
     try {
+        console.log(order);
         const {totalAmount: _totalAmount, createdAt: _createdAt, updatedAt: _updatedAt, id: _id, ...cleanOrder } = order;
+        console.log(cleanOrder.orderItems[0]);
         const formattedOrderItems = cleanOrder.orderItems.map(item => ({ productId: item.product.id, quantity: item.quantity }));
+        console.log("nach formattedItems");
         const newOrder = {
             ...cleanOrder,
             deliveryDate: cleanOrder.deliveryDate ? cleanOrder.deliveryDate.toISOString() : null,
             orderItems: formattedOrderItems,
             orderStatus: order.orderStatus
         }
+        console.log("vor axios");
         const response = await axios.post<OrderResponse>(ORDERS_URL, newOrder);
         return formatDates(response.data);
     } catch (error) {

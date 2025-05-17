@@ -110,7 +110,7 @@ function ListOrders() {
         const mappedOrderItems = newOrderProducts
             .filter(value => value !== null && value.product !== null && value.quantity > 0) // Sicherstellen, dass Produkt existiert und Menge > 0
             .map(value => ({
-                productId: value.product!.id, // Non-null assertion, da oben gefiltert
+                product: value.product,
                 quantity: value.quantity
             }));
 
