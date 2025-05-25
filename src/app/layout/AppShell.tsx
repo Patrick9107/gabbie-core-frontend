@@ -32,7 +32,7 @@ import {
 } from '@mui/icons-material';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { alpha } from '@mui/material/styles';
-import {setSmsFlag} from "../../infra/api/smsService.ts";
+import { setSmsFeatureStatus } from "../../infra/api/smsFeatureService.ts";
 
 const drawerWidth = 250;
 
@@ -85,7 +85,7 @@ function AppShell() {
     setSmsEnabled(newSmsState);
 
     try {
-      await setSmsFlag(newSmsState);
+      await setSmsFeatureStatus(newSmsState);
       console.log(`SMS status successfully updated to: ${newSmsState}`);
     } catch (error) {
       setSmsEnabled(originalSmsState);
