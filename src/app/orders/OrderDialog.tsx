@@ -106,11 +106,12 @@ const OrderDialog = ({
                         {apiError}
                     </Alert>
                 )}
-
+                {/* TODO TELEFONNUMMERN MÜSSEN IMMER MIT +43 beginnen*/}
                 <Stack spacing={2.5} sx={{ mt: apiError ? 0 : 1 }}>
                     <TextField
                         label="Telefonnummer"
                         name="phoneNumber"
+                        placeholder="+43........"
                         value={order.phoneNumber || ''}
                         fullWidth
                         variant="outlined"
