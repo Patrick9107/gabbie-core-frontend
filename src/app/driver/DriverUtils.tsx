@@ -1,4 +1,6 @@
-﻿export interface OrderItem {
+﻿// DriverUtils.ts
+
+export interface OrderItem {
     id: number;
     product: {
         id: number;
@@ -34,7 +36,7 @@ export interface RawStop {
     arrival: number;
     distance: number;
     status: string;
-    products: string;
+    products: string; // This might contain product names, consider parsing if detailed product info is needed
     customerData: string;
     note: string;
     order: Order;
@@ -48,7 +50,8 @@ export interface RouteData {
         stopover: boolean;
     }>;
     rawStops: RawStop[];
-    orderIds: number[];
+    orderIds: number[] | null; // Changed to number[] | null as per your example JSON
+    reserveStock: OrderItem[]; // <--- ADD THIS LINE
 }
 
 export const deserializeRouteData = (jsonString: string): RouteData => {

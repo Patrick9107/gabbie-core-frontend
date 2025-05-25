@@ -1,5 +1,5 @@
 ﻿import React from "react";
-import { Dialog, DialogActions, DialogContent, DialogTitle, Button, Typography, Grid } from "@mui/material";
+import { Dialog, DialogActions, DialogContent, DialogTitle, Button, Typography, Grid, Link } from "@mui/material"; // Import Link from @mui/material
 import { Stop } from "../../domain/Stop.ts";
 
 interface DetailsDialogProps {
@@ -9,6 +9,12 @@ interface DetailsDialogProps {
 }
 
 const DetailsDialog: React.FC<DetailsDialogProps> = ({ open, handleClose, stop }) => {
+    // Clean and format the phone number for the 'tel:' link
+    // Remove any non-digit characters to ensure it's a valid phone number for dialing
+    const rawPhoneNumber = stop.order?.phoneNumber;
+    const cleanedPhoneNumber = rawPhoneNumber ? rawPhoneNumber.replace(/\D/g, '') : '';
+    const telLink = cleanedPhoneNumber ? `tel:${cleanedPhoneNumber}` : '';
+
     return (
         <Dialog open={open} onClose={handleClose}>
             <DialogTitle>Stop Details</DialogTitle>
@@ -36,7 +42,13 @@ const DetailsDialog: React.FC<DetailsDialogProps> = ({ open, handleClose, stop }
                     </Grid>
                     <Grid item xs={12}>
                         <Typography variant="h6">Phone Number:</Typography>
-                        <Typography>{stop.order.phoneNumber || "No phone number available."}</Typography>
+                        {stop.order?.phoneNumber ? ( // Only render Link if phone number exists
+                            <Link href={telLink} color="primary" underline="hover">
+                                {stop.order.phoneNumber}
+                            </Link>
+                        ) : (
+                            <Typography>No phone number available.</Typography>
+                        )}
                     </Grid>
                 </Grid>
             </DialogContent>

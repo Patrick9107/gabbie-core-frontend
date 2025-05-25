@@ -1,6 +1,5 @@
 import { Grid, Box, Paper, Typography, useTheme } from "@mui/material";
 import { useEffect, lazy, Suspense } from "react";
-import AccessTimeIcon from '@mui/icons-material/AccessTime'; // Beispiel-Icon
 
 // Importiere die Komponenten mit React.lazy
 const Timesheet = lazy(() => import("./Timesheet.tsx"));
