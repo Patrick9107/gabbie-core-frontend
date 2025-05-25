@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   Box,
   Drawer,
@@ -16,7 +16,8 @@ import {
   DialogActions,
   Button,
   useTheme,
-  Typography
+  Typography,
+  Switch, Snackbar, Alert
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
@@ -30,6 +31,8 @@ import {
   Mail,
 } from '@mui/icons-material';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { alpha } from '@mui/material/styles';
+import {setSmsFlag} from "../../infra/api/smsService.ts";
 
 const drawerWidth = 250;
 
@@ -39,6 +42,7 @@ interface NavItem {
   icon?: React.ReactElement;
   action?: () => void;
   divider?: boolean;
+  isSmsToggle?: boolean;
 }
 
 function AppShell() {
@@ -46,26 +50,58 @@ function AppShell() {
   const location = useLocation();
   const theme = useTheme();
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+  const [smsEnabled, setSmsEnabled] = useState(true);
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error' | 'info'; // As per your type
+  } | null>(null);
 
-  const handleNavClick = (link?: string, action?: () => void) => {
+  const handleNavClick = useCallback((link?: string, action?: () => void) => {
     if (action) {
       action();
     } else if (link) {
       navigate(link);
     }
-  };
+  }, [navigate]);
 
-  const handleLogoutClick = () => {
+  const handleLogoutClick = useCallback(() => {
     setLogoutDialogOpen(true);
-  };
+  }, []);
 
-  const handleLogoutConfirm = () => {
+  const handleLogoutConfirm = useCallback(() => {
     setLogoutDialogOpen(false);
     navigate('/logout');
-  };
+  }, [navigate]);
 
-  const handleLogoutCancel = () => {
+  const handleLogoutCancel = useCallback(() => {
     setLogoutDialogOpen(false);
+  }, []);
+
+  const handleSmsToggle = useCallback(async () => {
+    const originalSmsState = smsEnabled;
+    const newSmsState = !originalSmsState;
+
+    setSmsEnabled(newSmsState);
+
+    try {
+      await setSmsFlag(newSmsState);
+      console.log(`SMS status successfully updated to: ${newSmsState}`);
+    } catch (error) {
+      setSmsEnabled(originalSmsState);
+      console.error('Failed to update SMS status via API:', error);
+
+      const errorMessage = error instanceof Error ? error.message : 'Ein unbekannter Fehler ist aufgetreten.';
+      setSnackbar({
+        open: true,
+        message: errorMessage,
+        severity: 'error',
+      });
+    }
+  }, [smsEnabled, setSmsEnabled]);
+
+  const handleCloseSnackbar = () => {
+    setSnackbar(null);
   };
 
   const navItems: NavItem[] = useMemo(() => [
@@ -76,10 +112,11 @@ function AppShell() {
     { text: 'Routenplanung', link: '/routes', icon: <AddLocationAltIcon /> },
     { text: 'Fahrzeuge', link: '/fahrzeuge', icon: <LocalShippingIcon /> },
     { text: 'Routen Historie', link: '/history', icon: <HistoryIcon /> },
-    { text: 'SMS', link: '/SMS', icon: <Mail /> },
+    { divider: true },
+    { text: 'SMS', icon: <Mail />, isSmsToggle: true },
     { divider: true },
     { text: 'Abmelden', link: '/logout', icon: <ExitToAppIcon />, action: handleLogoutClick }
-  ], []);
+  ], [handleLogoutClick]);
 
   return (
       <Box sx={{ display: 'flex' }}>
@@ -107,8 +144,48 @@ function AppShell() {
               if (item.divider) {
                 return <Divider key={`divider-${index}`} sx={{ my: 1 }} />;
               }
+
+              // Handle SMS toggle item
+              if (item.isSmsToggle) {
+                return (
+                    <ListItem key={item.text || `sms-toggle-${index}`} disablePadding sx={{ display: 'block', mb: 0.5 }}>
+                      <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            minHeight: 48,
+                            px: 2.5,
+                            borderRadius: '8px', // Consistent styling
+                            color: theme.palette.text.secondary, // Consistent styling
+                          }}
+                      >
+                        {item.icon && (
+                            <ListItemIcon
+                                sx={{
+                                  minWidth: 0,
+                                  mr: 3,
+                                  justifyContent: 'center',
+                                  color: 'inherit',
+                                }}
+                            >
+                              {item.icon}
+                            </ListItemIcon>
+                        )}
+                        {item.text && <ListItemText primary={item.text} sx={{ opacity: 1, flexGrow: 1 }} />}
+                        <Switch
+                            checked={smsEnabled}
+                            onChange={handleSmsToggle}
+                            onClick={(e) => e.stopPropagation()} // Prevent click bubbling if any
+                            inputProps={{ 'aria-label': `Toggle ${item.text}` }}
+                        />
+                      </Box>
+                    </ListItem>
+                );
+              }
+
+              // Regular navigation items
               return (
-                  <ListItem key={item.text} disablePadding sx={{ display: 'block', mb: 0.5 }}>
+                  <ListItem key={item.text || `item-${index}`} disablePadding sx={{ display: 'block', mb: 0.5 }}>
                     <ListItemButton
                         onClick={() => handleNavClick(item.link, item.action)}
                         selected={!item.action && !!item.link && location.pathname === item.link}
@@ -140,7 +217,7 @@ function AppShell() {
                                 minWidth: 0,
                                 mr: 3,
                                 justifyContent: 'center',
-                                color: 'inherit',
+                                color: 'inherit', // Will inherit selected color
                               }}
                           >
                             {item.icon}
@@ -180,10 +257,20 @@ function AppShell() {
             </Button>
           </DialogActions>
         </Dialog>
+        {snackbar && (
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={6000}
+                onClose={handleCloseSnackbar}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+              <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} variant="filled" sx={{ width: '100%' }}>
+                {snackbar.message}
+              </Alert>
+            </Snackbar>
+        )}
       </Box>
   );
 }
-
-import { alpha } from '@mui/material/styles';
 
 export default React.memo(AppShell);

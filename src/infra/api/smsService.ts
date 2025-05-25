@@ -14,6 +14,19 @@ export const getAllSmsTemplates = async (): Promise<SmsTemplate[]> => {
   }
 };
 
+// todo evtl. anpassen @jakub
+export const setSmsFlag = async (isEnabled: boolean): Promise<void> => {
+  try {
+    console.log("API CALL mit enabled=" + isEnabled)
+    await axios.put(SMS_TEMPLATE_URL, { enabled: isEnabled });
+  } catch (error) {
+    const message = axios.isAxiosError(error)
+        ? error.response?.data?.message || error.message
+        : String(error);
+    throw new Error(`Fehler beim Setzen des SMS-Aktivierungsstatus auf ${isEnabled}: ${message}`);
+  }
+};
+
 export const getSmsTemplateById = async (id: string): Promise<SmsTemplate> => {
   try {
     const response = await axios.get<SmsTemplate>(`${SMS_TEMPLATE_URL}/${id}`);
