@@ -3,10 +3,13 @@ import { GoogleMap, LoadScript, DirectionsRenderer, Marker } from "@react-google
 import { Fab, Tooltip } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 
-const Maps_API_KEY = "AIzaSyApPuaS2JBlsXJpN7wvGzQEXK5w9nlUgE0"; // REMINDER: Secure this API key!
+const Maps_API_KEY = "AIzaSyApPuaS2JBlsXJpN7wvGzQEXK5w9nlUgE0"; // HINWEIS: API-Key sichern!
+
+// --- ANPASSUNG HIER ---
+// Die Höhe wird auf 100% gesetzt, damit die Karte den Container ausfüllt, in dem sie platziert wird.
 const containerStyle = {
     width: "100%",
-    height: "70vh",
+    height: "100%",
 };
 
 const MapComponent = ({ routeData }: { routeData: any }) => {
@@ -17,60 +20,37 @@ const MapComponent = ({ routeData }: { routeData: any }) => {
     const fixedOrigin = "Heldenpl. 23, 2440 Reisenberg";
 
     const calculateAndSetDirections = useCallback(() => {
-        console.log("MapComponent: Attempting to calculate directions...");
-        console.log("Received routeData:", routeData);
-
         if (!routeData || !window.google) {
             setDirections(null);
-            console.warn("MapComponent: routeData or Google API not loaded.");
             return;
         }
 
         const directionsService = new window.google.maps.DirectionsService();
-
         const { rawStops } = routeData;
 
-        let originAddress: string = fixedOrigin;
-        let destinationAddress: string = '';
-        let waypointsList: google.maps.DirectionsWaypoint[] = [];
-
         if (!Array.isArray(rawStops) || rawStops.length === 0) {
-            console.warn("MapComponent: rawStops array is empty or not an array.");
             setDirections(null);
             return;
         }
 
         const stopsToProcess = rawStops.filter((stop: any) => stop && stop.name);
-
         if (stopsToProcess.length === 0) {
-            console.warn("MapComponent: No valid stops found in rawStops after filtering.");
             setDirections(null);
             return;
         }
 
-        if (stopsToProcess.length === 1) {
-            destinationAddress = stopsToProcess[0].name;
-            waypointsList = [];
-        } else {
+        // Der erste Stopp ist immer der Startpunkt
+        const originAddress = stopsToProcess[0].name || fixedOrigin;
+        let destinationAddress: string = originAddress; // Ziel ist gleich Start, wenn nur ein Stopp da ist
+        let waypointsList: google.maps.DirectionsWaypoint[] = [];
+
+        if (stopsToProcess.length > 1) {
             destinationAddress = stopsToProcess[stopsToProcess.length - 1].name;
-            const potentialWaypoints = stopsToProcess.slice(1, stopsToProcess.length - 1);
-            waypointsList = potentialWaypoints.map((stop: any) => ({
+            waypointsList = stopsToProcess.slice(1, -1).map((stop: any) => ({
                 location: stop.name,
                 stopover: true
             }));
         }
-
-        if (!originAddress.trim() || !destinationAddress.trim()) {
-            console.warn("MapComponent: Origin or Destination address is invalid after derivation.", { originAddress, destinationAddress });
-            setDirections(null);
-            return;
-        }
-
-        console.log("MapComponent: Requesting directions with:", {
-            origin: originAddress,
-            destination: destinationAddress,
-            waypoints: waypointsList
-        });
 
         directionsService.route(
             {
@@ -79,12 +59,11 @@ const MapComponent = ({ routeData }: { routeData: any }) => {
                 waypoints: waypointsList,
                 travelMode: google.maps.TravelMode.DRIVING,
             },
-            (result: google.maps.DirectionsResult | null, status: google.maps.DirectionsStatus) => {
+            (result, status) => {
                 if (status === window.google.maps.DirectionsStatus.OK && result) {
                     setDirections(result);
-                    console.log("Directions fetched successfully.");
                 } else {
-                    console.error("Error fetching directions:", status, result);
+                    console.error("Error fetching directions:", status);
                     setDirections(null);
                 }
             }
@@ -101,12 +80,10 @@ const MapComponent = ({ routeData }: { routeData: any }) => {
                 if (window.google) {
                     const location = new window.google.maps.LatLng(position.coords.latitude, position.coords.longitude);
                     setUserLocation(location);
-                } else {
-                    console.warn("Google Maps API not loaded, cannot get user location.");
                 }
             },
             (error) => console.error("Error getting location:", error),
-            { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+            { enableHighAccuracy: true }
         );
 
         return () => navigator.geolocation.clearWatch(watchId);
@@ -116,7 +93,7 @@ const MapComponent = ({ routeData }: { routeData: any }) => {
         setMapRefreshTrigger(prev => prev + 1);
     };
 
-    const defaultCenter = { lat: 47.999649, lng: 16.524391 }; // Reisenberg Coordinates
+    const defaultCenter = { lat: 47.999649, lng: 16.524391 }; // Reisenberg Koordinaten
 
     return (
         <LoadScript googleMapsApiKey={Maps_API_KEY}>
@@ -147,10 +124,10 @@ const MapComponent = ({ routeData }: { routeData: any }) => {
                     aria-label="reload"
                     onClick={handleReloadMap}
                     sx={{
-                        position: 'fixed', // CHANGED FROM 'absolute' to 'fixed'
-                        bottom: '20px',
-                        right: '20px',
-                        zIndex: 1000
+                        position: 'absolute', // Absolute Positionierung relativ zum Paper-Container
+                        bottom: '16px',
+                        right: '16px',
+                        zIndex: 1
                     }}
                 >
                     <RefreshIcon />

@@ -1,15 +1,15 @@
 ﻿import React, { useEffect, useState } from "react";
-import AddressInput from "./AddressInput";
 import MapComponent from "./Map";
 import RouteDialog from "./RouteDialog";
-import SaveRoute from "./SaveRoute";
-import { Box, Typography, Dialog, DialogActions, DialogContent, DialogTitle, Button } from "@mui/material";
+// --- HINZUGEFÜGT: Alert ---
+import { Box, Typography, Dialog, DialogActions, DialogContent, DialogTitle, Button, Grid, Paper, CircularProgress, Alert } from "@mui/material";
 import { Order } from "../../domain/Order.ts";
 import { Stop } from "../../domain/Stop.ts";
 import { useLocation } from "react-router-dom";
 import { handleGetRoute } from "./RouteUtils.tsx";
 import RouteSplit from "./RouteSplit.tsx";
 
+// Die RouteState-Schnittstelle bleibt unverändert
 interface RouteState {
     origin: string;
     destination: string;
@@ -20,6 +20,7 @@ interface RouteState {
 
 const RoutesPage: React.FC = () => {
     const [routeData, setRouteData] = useState<RouteState | null>(null);
+    const [isLoading, setIsLoading] = useState<boolean>(true); // Startet mit true
     const [openDialog, setOpenDialog] = useState(false);
     const [openErrorDialog, setOpenErrorDialog] = useState(false);
     const [selectedStop] = useState<Stop | null>(null);
@@ -31,6 +32,8 @@ const RoutesPage: React.FC = () => {
     useEffect(() => {
         if (initialOrders.length > 0) {
             fetchRouteData(initialOrders);
+        } else {
+            setIsLoading(false); // Kein Lade-Spinner, wenn keine Bestellungen da sind
         }
     }, [initialOrders]);
 
@@ -44,43 +47,61 @@ const RoutesPage: React.FC = () => {
 
     const handleDialogSave = (updatedStop: Stop) => {
         if (!routeData) return;
-
         const updatedStops = routeData.rawStops.map(stop =>
             stop.order.id === updatedStop.order.id ? updatedStop : stop
         );
-
         setRouteData({ ...routeData, rawStops: updatedStops });
         setOpenDialog(false);
     };
 
     const fetchRouteData = async (orders: Order[]) => {
+        setIsLoading(true); // Ladeanzeige starten
         try {
-            await new Promise(resolve => setTimeout(resolve, 10000));
             const result = await handleGetRoute(orders, "Reisenberg");
             setRouteData(result);
         } catch (error) {
             console.error("Fehler beim Abrufen der Route:", error);
             setError("Es gab ein Problem bei der Routenberechnung. Bitte überprüfen Sie die Adressen.");
-            setOpenErrorDialog(true);  // Show the error dialog
+            setOpenErrorDialog(true);
+        } finally {
+            setIsLoading(false); // Ladeanzeige beenden
         }
     };
 
     return (
-        <Box sx={{ display: "flex", flexDirection: "column", height: "100vh", p: 2 }}>
+        <Box sx={{ p: { xs: 2, md: 3 } }}>
             <Typography variant="h4" component="h1" sx={{ mb: 2 }}>
-                Routenplanung
+                Routenplanung & Aufteilung
             </Typography>
 
-            <Box sx={{ display: "flex", height: "70vh" }}>
-                <Box sx={{ flexGrow: 1, display: "flex", justifyContent: "center", alignItems: "center" }}>
-                    {routeData && <MapComponent routeData={routeData} />}
+            {isLoading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
+                    <CircularProgress />
+                    <Typography sx={{ ml: 2 }}>Route wird berechnet...</Typography>
                 </Box>
-                <Box sx={{ width: 300, p: 2, border: "1px solid #ddd", borderRadius: "8px" }}>
-                    <AddressInput initialOrders={initialOrders} onSubmit={fetchRouteData} />
-                    <SaveRoute routeData={routeData} />
-                </Box>
-            </Box>
+            ) : error ? (
+                <Alert severity="error">{error}</Alert>
+            ) : initialOrders.length === 0 ? (
+                <Typography variant="body1" color="text.secondary" sx={{ p: 2 }}>
+                    Keine Bestellungen zur Planung ausgewählt. Bitte gehen Sie zur Bestellübersicht zurück.
+                </Typography>
+            ) : (
+                <Grid container spacing={3}>
+                    {/* Karte: Behält eine feste, aber großzügige Höhe */}
+                    <Grid item xs={12}>
+                        <Paper elevation={3} sx={{ height: '55vh', minHeight: '400px', width: '100%' }}>
+                            {routeData && <MapComponent routeData={routeData} />}
+                        </Paper>
+                    </Grid>
 
+                    {/* RouteSplit: Nimmt so viel Höhe wie benötigt, kein eigener Scrollbalken */}
+                    <Grid item xs={12}>
+                        {routeData && <RouteSplit orders={initialOrders} fixedStartAddress="Reisenberg" />}
+                    </Grid>
+                </Grid>
+            )}
+
+            {/* Dialoge bleiben unverändert */}
             <Dialog open={openErrorDialog} onClose={() => setOpenErrorDialog(false)}>
                 <DialogTitle>Fehler bei der Routenberechnung</DialogTitle>
                 <DialogContent>
@@ -93,9 +114,6 @@ const RoutesPage: React.FC = () => {
                 </DialogActions>
             </Dialog>
 
-            {initialOrders.length > 0 && (
-                <RouteSplit orders={initialOrders} fixedStartAddress="Reisenberg" />
-            )}
             <RouteDialog open={openDialog} stop={selectedStop} onClose={handleCloseDialog} onSave={handleDialogSave} />
         </Box>
     );

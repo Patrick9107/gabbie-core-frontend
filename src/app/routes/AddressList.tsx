@@ -25,7 +25,7 @@ import { Stop } from "../../domain/Stop.ts";
 export const DRIVER_ORDER_STATUSES = [
     { value: "pending", label: "Ausstehend" },
     { value: "in-progress", label: "In Bearbeitung" },
-    { value: "completed", label: "Abgeschlossen" },
+    { value: "delivered", label: "Zugestellt" },
     { value: "failed", label: "Fehlgeschlagen" },
 ];
 
