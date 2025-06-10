@@ -14,6 +14,9 @@ import { useTheme } from '@mui/material/styles';
 import SmallIconButton from "../../core/ui/SmallIconButton.tsx";
 import React from "react";
 
+// HIER Backend URL festlegen → GANZ wichtig!
+const BACKEND_URL = "http://localhost:5120";
+
 interface Props {
     product: Product;
     onDelete?: (id: number) => void;
@@ -79,7 +82,7 @@ const ProductCard = ({ product, onDelete, onEdit }: Props) => {
                 {product.imageUrl ? (
                     <Box
                         component="img"
-                        src={product.imageUrl}
+                        src={`${BACKEND_URL}${product.imageUrl}`} // HIER → richtig bauen!
                         alt={product.name}
                         sx={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }}
                     />

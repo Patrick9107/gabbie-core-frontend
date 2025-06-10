@@ -21,6 +21,7 @@ import { ChangeEvent, useState, useEffect } from "react";
 import { Container } from "../../domain/Container.ts";
 import EditIcon from '@mui/icons-material/Edit';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 
 interface Props {
     open: boolean;
@@ -33,6 +34,7 @@ interface Props {
     onContainerChange: (containerId: number | null) => void;
     apiError: string | null;
     clearApiError: () => void;
+    onImageChange: (file: File | null) => void; // NEU
 }
 
 interface ErrorState {
@@ -48,19 +50,21 @@ const noErrors: ErrorState = {
 };
 
 function ProductDialog({
-                                 open,
-                                 edit,
-                                 product,
-                                 onClose,
-                                 onSubmit,
-                                 onChange,
-                                 onContainerChange,
-                                 containers,
-                                 apiError,
-                                 clearApiError
-                             }: Props) {
+                           open,
+                           edit,
+                           product,
+                           onClose,
+                           onSubmit,
+                           onChange,
+                           onContainerChange,
+                           containers,
+                           apiError,
+                           clearApiError,
+                           onImageChange
+                       }: Props) {
 
     const [errors, setErrors] = useState<ErrorState>(noErrors);
+    const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
 
     useEffect(() => {
         if (open) {
@@ -68,8 +72,9 @@ function ProductDialog({
             if (apiError) {
                 clearApiError();
             }
+            setSelectedFileName(product.imageUrl || null);
         }
-    }, [open, edit, product.id, apiError, clearApiError]);
+    }, [open, edit, product.id, product.imageUrl, apiError, clearApiError]);
 
     const validateForm = () => {
         const newErrors: ErrorState = {};
@@ -93,7 +98,6 @@ function ProductDialog({
             newErrors.weight = "Gewicht muss eine positive Zahl sein";
         }
 
-
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -106,6 +110,32 @@ function ProductDialog({
         clearApiError();
         if (validateForm()) {
             onSubmit();
+        }
+    };
+
+    const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            setSelectedFileName(file.name);
+
+            onChange({
+                target: {
+                    name: "imageUrl",
+                    value: file.name
+                }
+            } as unknown as ChangeEvent<HTMLInputElement>);
+
+            onImageChange(file); // NEU
+        } else {
+            setSelectedFileName(null);
+            onChange({
+                target: {
+                    name: "imageUrl",
+                    value: ""
+                }
+            } as unknown as ChangeEvent<HTMLInputElement>);
+
+            onImageChange(null); // NEU
         }
     };
 
@@ -135,9 +165,9 @@ function ProductDialog({
                     </Typography>
                 </Box>
             </DialogTitle>
-            <DialogContent sx={{ pt: 2, pb: 2}}>
+            <DialogContent sx={{ pt: 2, pb: 2 }}>
                 {apiError && (
-                    <Alert severity="error" sx={{ mb: 2, mt:1 }}>
+                    <Alert severity="error" sx={{ mb: 2, mt: 1 }}>
                         {apiError}
                     </Alert>
                 )}
@@ -221,22 +251,62 @@ function ProductDialog({
                         }}
                     />
 
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2.5}>
-                        <TextField
-                            label="Bild URL"
-                            name="imageUrl"
-                            value={product.imageUrl || ''}
-                            fullWidth
-                            onChange={onChange}
-                            type="url"
-                            variant="outlined"
-                            slotProps={{
-                                inputLabel: {
-                                    shrink: true
-                                }
-                            }}
-                        />
-                        <FormControl fullWidth variant="outlined">
+                    <Stack
+                        direction={{ xs: 'column', sm: 'row' }}
+                        spacing={2.5}
+                        alignItems="flex-start"
+                        sx={{
+                            '& > *': {
+                                display: 'flex',
+                                flexDirection: 'column',
+                                flexGrow: 1,
+                            }
+                        }}
+                    >
+                        {/* File Upload */}
+                        <FormControl fullWidth variant="outlined" sx={{ flex: 1 }}>
+                            <InputLabel htmlFor="file-upload-input" shrink={true}>Bild hochladen</InputLabel>
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    border: '1px solid',
+                                    borderColor: 'divider',
+                                    borderRadius: '8px',
+                                    padding: '16.5px 14px',
+                                    position: 'relative',
+                                    cursor: 'pointer',
+                                    minHeight: '56px',
+                                    '&:hover': {
+                                        borderColor: 'action.active',
+                                    },
+                                    '&:focus-within': {
+                                        borderColor: 'primary.main',
+                                        borderWidth: '2px',
+                                    }
+                                }}
+                                component="label"
+                                htmlFor="file-upload-input"
+                            >
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    hidden
+                                    id="file-upload-input"
+                                    onChange={handleFileChange}
+                                    key={product.id}
+                                />
+                                <Stack direction="row" spacing={1} alignItems="center">
+                                    <CloudUploadIcon color="action" />
+                                    <Typography variant="body1" color="text.secondary">
+                                        {selectedFileName || product.imageUrl || "Datei auswählen"}
+                                    </Typography>
+                                </Stack>
+                            </Box>
+                        </FormControl>
+
+                        {/* Container Select */}
+                        <FormControl fullWidth variant="outlined" sx={{ flex: 1 }}>
                             <InputLabel id="container-select-label" shrink={true}>Behälter</InputLabel>
                             <Select
                                 labelId="container-select-label"

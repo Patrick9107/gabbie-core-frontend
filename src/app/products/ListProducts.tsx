@@ -26,6 +26,7 @@ function ListProducts() {
     const [edit, setEdit] = useState(false);
     const [containers, setContainers] = useState<Container[]>([]);
     const [newProduct, setNewProduct] = useState<Product>(defaultProduct);
+    const [imageFile, setImageFile] = useState<File | null>(null);
     const [deleteConfirm, setDeleteConfirm] = useState(false);
     const [productToDelete, setProductToDelete] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
@@ -65,6 +66,7 @@ function ListProducts() {
         setOpen(false);
         setEdit(false);
         setNewProduct(defaultProduct);
+        setImageFile(null);
         setApiError(null);
     }
 
@@ -73,11 +75,11 @@ function ListProducts() {
         try {
             let responseProduct: Product;
             if (edit) {
-                responseProduct = await updateProduct(newProduct);
+                responseProduct = await updateProduct(newProduct, imageFile);
                 setProducts((prevProducts) => prevProducts.map(p => p.id === responseProduct.id ? responseProduct : p));
                 setSnackbar({ open: true, message: 'Produkt erfolgreich aktualisiert!', severity: 'success' });
             } else {
-                responseProduct = await createProduct(newProduct);
+                responseProduct = await createProduct(newProduct, imageFile);
                 setProducts((prevProducts) => [...prevProducts, responseProduct]);
                 setSnackbar({ open: true, message: 'Produkt erfolgreich erstellt!', severity: 'success' });
             }
@@ -178,7 +180,7 @@ function ListProducts() {
                         </Button>
                     </Box>
                 ) : (
-                    <ProductCards products={products} onDelete={handleDeleteButtonClicked} onEdit={handleEdit} isLoading={false}/>
+                    <ProductCards products={products} onDelete={handleDeleteButtonClicked} onEdit={handleEdit} isLoading={false} />
                 )}
 
                 <ProductDialog
@@ -192,6 +194,7 @@ function ListProducts() {
                     onContainerChange={handleContainerChange}
                     apiError={apiError}
                     clearApiError={() => setApiError(null)}
+                    onImageChange={(file) => setImageFile(file)}
                 />
 
                 <DeleteConfirmationDialog

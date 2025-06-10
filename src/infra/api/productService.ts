@@ -14,41 +14,71 @@ export const fetchProducts = async (): Promise<Product[]> => {
   }
 };
 
-export const fetchProductById = async (id: number): Promise<Product | null> => {
+export const createProduct = async (product: Product, imageFile?: File | null): Promise<Product> => {
   try {
-    const response = await axios.get<Product>(`${PRODUCTS_URL}/${id}`);
+    const formData = new FormData();
+    formData.append("Price", product.price.toString());
+    formData.append("Weight", product.weight.toString());
+    formData.append("Name", product.name);
+    formData.append("Description", product.description ?? "");
+
+    if (product.container?.id != null) {
+      formData.append("ContainerId", product.container.id.toString());
+    }
+
+    if (imageFile) {
+      formData.append("Image", imageFile);
+    }
+
+    const response = await axios.post<Product>(PRODUCTS_URL, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
     return response.data;
   } catch (error) {
-    throw new Error(`Error fetching product with ID ${id}: ${error}`);
-    return null;
+    throw new Error(
+        `Error creating product: ${
+            axios.isAxiosError(error)
+                ? error.response?.data?.message || error.message
+                : String(error)
+        }`
+    );
   }
 };
 
-export const createProduct = async (product: Product): Promise<Product> => {
+export const updateProduct = async (product: Product, imageFile?: File | null): Promise<Product> => {
   try {
-    const { id: _id, container, ...newProduct } = product;
-    const formattedProduct = {
-      ...newProduct,
-      containerId: container?.id ?? null
-    }
-    const response = await axios.post<Product>(PRODUCTS_URL, formattedProduct);
-    return response.data;
-  } catch (error) {
-    throw new Error(`Error creating product: ${axios.isAxiosError(error) ? error.response?.data?.message || error.message : error}`);
-  }
-};
+    const formData = new FormData();
+    formData.append("Price", product.price.toString());
+    formData.append("Weight", product.weight.toString());
+    formData.append("Name", product.name);
+    formData.append("Description", product.description ?? "");
 
-export const updateProduct = async (product: Product): Promise<Product> => {
-  try {
-    const { id, container, ...newProduct } = product;
-    const formattedProduct = {
-      ...newProduct,
-      containerId: container?.id ?? null
+    if (product.container?.id != null) {
+      formData.append("ContainerId", product.container.id.toString());
     }
-    const response = await axios.put<Product>(`${PRODUCTS_URL}/${id}`, formattedProduct);
+
+    if (imageFile) {
+      formData.append("Image", imageFile);
+    }
+
+    const response = await axios.put<Product>(`${PRODUCTS_URL}/${product.id}`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
     return response.data;
   } catch (error) {
-    throw new Error(`Error updating product with ID ${product.id}: ${axios.isAxiosError(error) ? error.response?.data?.message || error.message : error}`);
+    throw new Error(
+        `Error updating product with ID ${product.id}: ${
+            axios.isAxiosError(error)
+                ? error.response?.data?.message || error.message
+                : String(error)
+        }`
+    );
   }
 };
 

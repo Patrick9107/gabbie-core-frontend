@@ -8,30 +8,24 @@ interface Product {
     id: string;
     name: string;
     price: number; // Wichtig: Preis pro Einheit
+    weight?: number; // Gewicht pro Einheit (optional, fallback = 0)
 }
 
-// Annahme für die Struktur von OrderItem, falls nicht bereits in OrderResponse definiert
 interface OrderItem {
-    product: Product | null; // Product kann null sein
+    product: Product | null;
     quantity: number;
 }
 
-// Sicherstellen, dass OrderResponse OrderItems mit dieser Struktur enthält
-// interface OrderResponse {
-//   orderItems: OrderItem[];
-//   // ... andere Felder
-// }
-
-
 interface Props {
-    orders: OrderResponse[]; // Stellen Sie sicher, dass OrderResponse die verschachtelten Preisinformationen enthält
+    orders: OrderResponse[];
     sxCustom?: SxProps;
 }
 
 const OrderOverview = ({ orders, sxCustom }: Props) => {
-    const { productSummary, grandTotalPrice } = useMemo(() => {
+    const { productSummary, grandTotalPrice, grandTotalWeight } = useMemo(() => {
         const summary: Record<string, number> = {};
         let currentGrandTotalPrice = 0;
+        let currentGrandTotalWeight = 0;
 
         orders.forEach(order => {
             order.orderItems.forEach(item => {
@@ -39,14 +33,18 @@ const OrderOverview = ({ orders, sxCustom }: Props) => {
                     const productName = item.product.name;
                     summary[productName] = (summary[productName] || 0) + item.quantity;
 
-                    // Preisberechnung hinzufügen
-                    // Stellen Sie sicher, dass item.product.price existiert und eine Zahl ist
+                    // Preisberechnung
                     if (typeof item.product.price === 'number') {
                         currentGrandTotalPrice += item.quantity * item.product.price;
                     }
+
+                    // Gewichtberechnung (falls definiert)
+                    if (typeof item.product.weight === 'number') {
+                        currentGrandTotalWeight += item.quantity * item.product.weight;
+                    }
                 }
-            })
-        })
+            });
+        });
 
         const sortedSummary = Object.entries(summary)
             .sort(([, quantA], [, quantB]) => quantB - quantA)
@@ -55,11 +53,15 @@ const OrderOverview = ({ orders, sxCustom }: Props) => {
                 return obj;
             }, {} as Record<string, number>);
 
-        return { productSummary: sortedSummary, grandTotalPrice: currentGrandTotalPrice };
+        return { productSummary: sortedSummary, grandTotalPrice: currentGrandTotalPrice, grandTotalWeight: currentGrandTotalWeight };
     }, [orders]);
 
     const formatCurrency = (value: number) => {
         return value.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
+    };
+
+    const formatWeight = (value: number) => {
+        return `${value.toFixed(2)} kg`;
     };
 
     return (
@@ -72,7 +74,7 @@ const OrderOverview = ({ orders, sxCustom }: Props) => {
             maxWidth: "30rem"
         }}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
-                <InventoryIcon sx={{ color: '#3d9970', mr: 1 }}/>
+                <InventoryIcon sx={{ color: '#3d9970', mr: 1 }} />
                 <Typography variant="h6" component="div" sx={{ fontWeight: 'medium' }}>
                     Produktzusammenfassung
                 </Typography>
@@ -89,7 +91,7 @@ const OrderOverview = ({ orders, sxCustom }: Props) => {
                         {Object.keys(productSummary).length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={2} align="center">
-                                    <Typography variant="body2" color="textSecondary" sx={{py: 2}}>
+                                    <Typography variant="body2" color="textSecondary" sx={{ py: 2 }}>
                                         Keine Produkte in den Bestellungen gefunden.
                                     </Typography>
                                 </TableCell>
@@ -102,31 +104,54 @@ const OrderOverview = ({ orders, sxCustom }: Props) => {
                                         <TableCell align="right">{quantity}</TableCell>
                                     </TableRow>
                                 ))}
-                                {Object.keys(productSummary).length > 0 && (
-                                    <TableRow>
-                                        <TableCell
-                                            component="th"
-                                            scope="row"
-                                            sx={{
-                                                fontWeight: 'bold',
-                                                borderTop: (theme) => `1px solid ${theme.palette.divider}`,
-                                                pt: 1.5
-                                            }}
-                                        >
-                                            Gesamtpreis
-                                        </TableCell>
-                                        <TableCell
-                                            align="right"
-                                            sx={{
-                                                fontWeight: 'bold',
-                                                borderTop: (theme) => `1px solid ${theme.palette.divider}`,
-                                                pt: 1.5
-                                            }}
-                                        >
-                                            {formatCurrency(grandTotalPrice)}
-                                        </TableCell>
-                                    </TableRow>
-                                )}
+                                {/* Gesamtpreis */}
+                                <TableRow>
+                                    <TableCell
+                                        component="th"
+                                        scope="row"
+                                        sx={{
+                                            fontWeight: 'bold',
+                                            borderTop: (theme) => `1px solid ${theme.palette.divider}`,
+                                            pt: 1.5
+                                        }}
+                                    >
+                                        Gesamtpreis
+                                    </TableCell>
+                                    <TableCell
+                                        align="right"
+                                        sx={{
+                                            fontWeight: 'bold',
+                                            borderTop: (theme) => `1px solid ${theme.palette.divider}`,
+                                            pt: 1.5
+                                        }}
+                                    >
+                                        {formatCurrency(grandTotalPrice)}
+                                    </TableCell>
+                                </TableRow>
+                                {/* Gesamtgewicht */}
+                                <TableRow>
+                                    <TableCell
+                                        component="th"
+                                        scope="row"
+                                        sx={{
+                                            fontWeight: 'bold',
+                                            borderTop: (theme) => `1px solid ${theme.palette.divider}`,
+                                            pt: 1.5
+                                        }}
+                                    >
+                                        Gesamtgewicht
+                                    </TableCell>
+                                    <TableCell
+                                        align="right"
+                                        sx={{
+                                            fontWeight: 'bold',
+                                            borderTop: (theme) => `1px solid ${theme.palette.divider}`,
+                                            pt: 1.5
+                                        }}
+                                    >
+                                        {formatWeight(grandTotalWeight)}
+                                    </TableCell>
+                                </TableRow>
                             </>
                         )}
                     </TableBody>
