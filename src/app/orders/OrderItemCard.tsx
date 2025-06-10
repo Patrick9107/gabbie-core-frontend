@@ -14,6 +14,7 @@ import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import ImageNotSupportedIcon from '@mui/icons-material/ImageNotSupported';
 import { Product } from "../../domain/Product.ts";
+import {API_BASE_URL, BACKEND_URL} from "../../../apiConfig.ts";
 
 interface Props {
     product: Product;
@@ -85,7 +86,7 @@ const OrderItemCard = ({
                 {product.imageUrl ? (
                     <Box
                         component="img"
-                        src={product.imageUrl}
+                        src={`${BACKEND_URL}${product.imageUrl}`}
                         alt={product.name}
                         sx={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }}
                     />

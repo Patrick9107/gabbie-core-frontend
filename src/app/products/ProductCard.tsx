@@ -13,9 +13,9 @@ import { Product } from "../../domain/Product.ts";
 import { useTheme } from '@mui/material/styles';
 import SmallIconButton from "../../core/ui/SmallIconButton.tsx";
 import React from "react";
+import {BACKEND_URL} from "../../../apiConfig.ts";
 
 // HIER Backend URL festlegen → GANZ wichtig!
-const BACKEND_URL = "http://localhost:5120";
 
 interface Props {
     product: Product;
