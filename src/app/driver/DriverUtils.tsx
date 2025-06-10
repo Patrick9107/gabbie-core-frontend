@@ -1,4 +1,4 @@
-﻿// DriverUtils.ts
+﻿// DriverUtils.tsx
 
 export interface OrderItem {
     id: number;
@@ -22,7 +22,11 @@ export interface Order {
     address: string;
     phoneNumber: string;
     orderItems: OrderItem[];
-    status: number;
+    // 'status' wird vom Backend als 'pending', 'completed' etc. kommen.
+    // Das Frontend-Modell erwartet aber `orderStatus`. Wir fügen es hier hinzu.
+    // Annahme ist, dass es sich um eine Zahl (Enum-Wert) handelt.
+    status: number | string; // Behalten wir zur Kompatibilität mit dem bestehenden Code.
+    orderStatus: number; // --- DIESE ZEILE WURDE HINZUGEFÜGT ---
     note: string;
     orderSource: number;
     deliveryWindowStartDate: string | null;
@@ -31,12 +35,13 @@ export interface Order {
     routeId: number;
 }
 
+// RawStop und RouteData bleiben unverändert, aber profitieren von der korrigierten Order-Definition.
 export interface RawStop {
     name: string;
     arrival: number;
     distance: number;
     status: string;
-    products: string; // This might contain product names, consider parsing if detailed product info is needed
+    products: string;
     customerData: string;
     note: string;
     order: Order;
@@ -50,8 +55,8 @@ export interface RouteData {
         stopover: boolean;
     }>;
     rawStops: RawStop[];
-    orderIds: number[] | null; // Changed to number[] | null as per your example JSON
-    reserveStock: OrderItem[]; // <--- ADD THIS LINE
+    orderIds: number[] | null;
+    reserveStock: OrderItem[];
 }
 
 export const deserializeRouteData = (jsonString: string): RouteData => {

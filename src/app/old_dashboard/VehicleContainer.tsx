@@ -1,39 +1,71 @@
-﻿import { useEffect, useState } from "react";
-import { Vehicle } from "../../domain/Vehicle"; // Ensure this import is correct
-import VehiclePanelList from "./VehiclePanelList";
-import { API_BASE_URL } from "../../../apiConfig.ts";
+﻿import React, { useEffect, useState } from 'react';
+import { Grid, Box, CircularProgress, Alert, Typography } from '@mui/material';
+import { Vehicle } from '../../domain/Vehicle'; // Pfad ggf. anpassen
+import { API_BASE_URL } from '../../../apiConfig'; // Pfad ggf. anpassen
+import VehicleProgressCard from './VehicleProgressCard'; // Import unserer neuen Karten-Komponente
 
-const VehicleDataContainer = () => {
+const VehicleContainer: React.FC = () => {
     const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-    const [loading, setLoading] = useState<boolean>(true); // Initial loading state for vehicles
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        async function fetchVehicles() {
-            setLoading(true); // Set loading true before fetch
+        const fetchVehicles = async () => {
+            setLoading(true);
+            setError(null);
             try {
                 const response = await fetch(`${API_BASE_URL}/vehicle`);
-                if (!response.ok) { // Check for HTTP errors
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                if (!response.ok) {
+                    throw new Error(`Fehler beim Laden der Fahrzeuge: ${response.status}`);
                 }
-                const data = await response.json();
+                const data: Vehicle[] = await response.json();
                 setVehicles(data);
-            } catch (error) {
-                console.error("Fehler beim Laden der Fahrzeugdaten:", error);
-                // Optionally set an error state here if you want to display it
+            } catch (err: any) {
+                console.error("Fehler im VehicleContainer:", err);
+                setError(err.message || "Ein unbekannter Fehler ist aufgetreten.");
             } finally {
-                setLoading(false); // End loading regardless of success or failure
+                setLoading(false);
             }
-        }
+        };
 
         fetchVehicles();
     }, []);
 
-    // It's better to show a spinner/message than just 'p' tag
-    return loading ? (
-        <p>Lade Fahrzeuge...</p> // Or a Material-UI CircularProgress
-    ) : (
-        <VehiclePanelList vehicles={vehicles} />
+    if (loading) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '150px' }}>
+                <CircularProgress />
+            </Box>
+        );
+    }
+
+    if (error) {
+        return (
+            <Alert severity="error" sx={{ width: '100%' }}>
+                {error}
+            </Alert>
+        );
+    }
+
+    return (
+        <Box>
+            {vehicles.length > 0 ? (
+                <Grid container spacing={3}>
+                    {vehicles.map((vehicle) => (
+                        // --- ANPASSUNG HIER ---
+                        // md={6} -> 2 Karten pro Zeile auf allen Bildschirmen ab der Größe "small"
+                        <Grid item key={vehicle.id} xs={12} sm={6} md={6}>
+                            <VehicleProgressCard vehicle={vehicle} />
+                        </Grid>
+                    ))}
+                </Grid>
+            ) : (
+                <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', mt: 4 }}>
+                    Keine Fahrzeuge im System gefunden.
+                </Typography>
+            )}
+        </Box>
     );
 };
 
-export default VehicleDataContainer;
+export default VehicleContainer;
